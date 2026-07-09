@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SolFit Atlas">
+<meta name="theme-color" content="#0F0E0B">
+<title>SolFit Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F0E0B; --card:#1A1712; --card2:#26221A; --line:#332D22;
+  --gold:#F5C842; --gold2:#C89B1F; --sky:#7FB4D9; --green:#8FCB8F; --red:#E0604D;
+  --text:#F2EDE3; --text2:#A69B85; --text3:#6E6452;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:16px;min-height:100vh}
+#app{max-width:430px;margin:0 auto;padding:calc(14px + var(--safe-top)) 16px calc(90px + var(--safe-bottom))}
+h1{font-weight:800;font-size:26px;letter-spacing:-.02em;text-transform:uppercase;font-style:italic}
+h2{font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin:22px 0 10px}
+.mono{font-family:'JetBrains Mono',monospace}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.card2{background:var(--card2)}
+.row{display:flex;align-items:center;gap:12px}
+.spread{display:flex;align-items:center;justify-content:space-between}
+.btn{display:block;width:100%;background:var(--gold);color:#141105;border:none;border-radius:12px;padding:14px;font-family:'Outfit';font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold2)}
+.btn.dim{background:var(--card2);color:var(--text2);border:1px solid var(--line)}
+.btn.sm{padding:9px 12px;font-size:12px;border-radius:9px;width:auto;display:inline-block}
+.badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--text2)}
+.badge.gold{color:var(--gold);border-color:var(--gold2)}
+.badge.sky{color:var(--sky);border-color:#3d5a70}
+.badge.green{color:var(--green);border-color:#3f5c3f}
+.muted{color:var(--text2);font-size:13px}
+.tiny{color:var(--text3);font-size:11.5px;letter-spacing:.03em}
+input,select,textarea{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-family:'JetBrains Mono';font-size:15px;width:100%}
+input:focus,select:focus,textarea:focus,.btn:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+label{display:block;font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px;font-weight:600}
+#bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(20,17,12,.96);backdrop-filter:blur(18px);border-top:1px solid var(--line);display:flex;padding-bottom:var(--safe-bottom);z-index:100}
+.nav-btn{flex:1;background:none;border:none;color:var(--text3);padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:10px;font-weight:600;letter-spacing:.05em;font-family:'Outfit'}
+.nav-btn.active{color:var(--gold)}
+.nav-btn svg{width:22px;height:22px}
+.ring-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+.check{width:26px;height:26px;min-width:26px;border-radius:8px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:transparent;transition:all .15s}
+.check.on{background:var(--gold);border-color:var(--gold);color:#141105;font-weight:900}
+.check.green.on{background:var(--green);border-color:var(--green)}
+.list-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.list-item:last-child{border-bottom:none}
+.set-grid{display:grid;grid-template-columns:34px 1fr 1fr 40px;gap:8px;align-items:center;margin-bottom:8px}
+.set-grid input{padding:8px;text-align:center;font-size:14px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:20px 20px 0 0;padding:20px 18px calc(24px + var(--safe-bottom));width:100%;max-width:430px;max-height:85vh;overflow-y:auto}
+.week-pill{min-width:40px;padding:8px 0;text-align:center;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text2);font-family:'JetBrains Mono';font-size:13px;cursor:pointer;flex-shrink:0}
+.week-pill.cur{border-color:var(--gold);color:var(--gold);font-weight:700}
+.week-pill.sel{background:var(--gold);color:#141105;border-color:var(--gold);font-weight:700}
+.hscroll{display:flex;gap:7px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.stat{background:var(--card2);border-radius:12px;padding:12px;text-align:center;flex:1}
+.stat .v{font-family:'JetBrains Mono';font-weight:700;font-size:20px;color:var(--gold)}
+.stat .l{font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+.macro-bar{display:flex;gap:8px;margin-top:10px}
+.macro{flex:1;background:var(--card2);border-radius:10px;padding:8px;text-align:center}
+.macro .v{font-family:'JetBrains Mono';font-weight:600;font-size:14px}
+.macro .l{font-size:10px;color:var(--text3);text-transform:uppercase;margin-top:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+.fade{animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.gear{background:none;border:none;color:var(--text3);cursor:pointer;padding:6px}
+.session-hero{border-radius:16px;padding:18px;margin-bottom:12px;border:1px solid var(--line);position:relative;overflow:hidden}
+.session-hero.gym{background:linear-gradient(135deg,#26200f, #1A1712)}
+.session-hero.cardio{background:linear-gradient(135deg,#14202a, #1A1712)}
+.session-hero.rest{background:linear-gradient(135deg,#1c2418, #1A1712)}
+.toast{position:fixed;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:var(--gold);color:#141105;font-weight:700;padding:10px 18px;border-radius:99px;z-index:300;font-size:14px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav id="bottom-nav">
+  <button class="nav-btn" id="nav-home" onclick="gotoPage('home')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10"/></svg>Hjem</button>
+  <button class="nav-btn" id="nav-training" onclick="gotoPage('training')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 17l5-9 4 6 3-4 4 7H4z"/></svg>Trening</button>
+  <button class="nav-btn" id="nav-food" onclick="gotoPage('food')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v8a3 3 0 003 3v7M5 3v5M8 3v5M18 3c-2 2-3 4-3 7h3v11"/></svg>Mat</button>
+  <button class="nav-btn" id="nav-progress" onclick="gotoPage('progress')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-4 3 2 5-7"/></svg>Fremgang</button>
+</nav>
+<script>
+// ============================================================
+// PROGRAM: SolFit Atlas — 13. juli → 27. oktober 2026
+// ============================================================
+const START = new Date('2026-07-13T00:00:00');
+const TRIP  = new Date('2026-10-27T00:00:00');
+const TOTAL_WEEKS = 15;
+const DIET_BREAK_WEEKS = [7,12];
+const BENCHMARK_WEEKS = [3,7,11,14];
+const WEIGHT_START = 86, WEIGHT_GOAL = 76;
+
+const PHASES = [
+  {id:'base', name:'Base',  weeks:[1,4],  desc:'Aerob grunnmur + normal styrke. Kropp og ledd vennes til volum.'},
+  {id:'bygg', name:'Bygg',  weeks:[5,9],  desc:'Intervaller inn, lengre turer, tyngre sekk. Diet break uke 7.'},
+  {id:'peak', name:'Peak',  weeks:[10,14],desc:'Lengste turer, 1000–1400 hm, sekk 10–12 kg. Deload uke 12.'},
+  {id:'taper',name:'Taper', weeks:[15,15],desc:'Halvert volum. Karbfylling fra torsdag — full og fjellklar.'}
+];
+
+// Lørdagsturer: timer / sekk kg / høydemeter
+const HIKES = {
+  1:{h:'1,5 t',pack:5, elev:300, note:'Rolig start. Finn rytmen, test sko og sekk.'},
+  2:{h:'2 t',  pack:5, elev:400, note:'Samme tempo, litt lengre.'},
+  3:{h:'2 t',  pack:7, elev:500, note:'BENCHMARK #1 — gå benchmarkruta på tid.'},
+  4:{h:'2,5 t',pack:7, elev:600, note:'Fokus på jevn puls i motbakkene.'},
+  5:{h:'2,5 t',pack:8, elev:700, note:'Øk sekken. Drikk underveis.'},
+  6:{h:'3 t',  pack:8, elev:800, note:'Første 3-timer. Ta med turmat.'},
+  7:{h:'3 t',  pack:8, elev:800, note:'BENCHMARK #2 — diet break-uke, du skal føle deg sterk.'},
+  8:{h:'3,5 t',pack:10,elev:900, note:'10 kg sekk. Tren på nedoverteknikk.'},
+  9:{h:'3,5 t',pack:10,elev:1000,note:'Første 1000 hm-dag.'},
+  10:{h:'4 t', pack:10,elev:1100,note:'Atlas-simulering: lange, jevne stigninger.'},
+  11:{h:'4 t', pack:12,elev:1200,note:'BENCHMARK #3 — full pakke, 12 kg.'},
+  12:{h:'3 t', pack:8, elev:700, note:'Deload — lettere tur, diet break.'},
+  13:{h:'4,5–5 t',pack:12,elev:1350,note:'TOPPUKE. Lengste tur. Søndag: valgfri rolig 1,5 t (back-to-back).'},
+  14:{h:'4 t', pack:12,elev:1200,note:'BENCHMARK #4 — siste test. Sammenlign med uke 3.'},
+  15:{h:'2 t', pack:5, elev:400, note:'Taper. Hold beina i gang, ikke tapp dem.'}
+};
+
+// Kondis-parametre per fase
+const CARDIO = {
+  z2:  {base:{min:45,inc:'10 %',note:'Snakketempo. Puls 60–70 % av maks.'},
+        bygg:{min:55,inc:'12 %',note:'Samme intensitet, lengre tid.'},
+        peak:{min:65,inc:'12–15 %',note:'Fra uke 11: gå med 8 kg sekk på mølla.'},
+        taper:{min:35,inc:'10 %',note:'Lett vedlikehold.'}},
+  int: {base:{reps:'3 × 4 min',note:'Puls 85–92 %. 3 min rolig pause mellom. Sykkel eller mølle 12–15 % stigning.'},
+        bygg:{reps:'4 × 4 min',note:'Norsk 4×4. Siste minutt av hvert drag skal svi.'},
+        peak:{reps:'4–5 × 4 min',note:'Øk fart/watt fra forrige fase. 5 drag hvis overskudd.'},
+        taper:{reps:'2 × 4 min',note:'Bare vedlikehold av toppfart.'}}
+};
+
+// Ukeplan: man=0 ... søn=6
+const WEEK_TEMPLATE = [
+  {type:'gym', key:'push', name:'Push',        finisher:'+ 20 min mølle 12 % rask gange'},
+  {type:'gym', key:'bein', name:'Bein Fjell',  finisher:'+ 10 min rolig sykkel (restitusjon)'},
+  {type:'z2',  name:'Sone 2',                  finisher:''},
+  {type:'gym', key:'pull', name:'Pull',        finisher:'+ 20 min mølle 12 % rask gange'},
+  {type:'int', name:'Intervaller 4×4',         finisher:''},
+  {type:'hike',name:'Langtur m/ sekk',         finisher:''},
+  {type:'rest',name:'Hvile',                   finisher:''}
+];
+
+const GYM = {
+  push:{name:'Push', emoji:'💪', focus:'Bryst · Skuldre · Triceps — media-kroppen',
+    ex:[
+      {id:'machine_chest', name:'Machine Chest Press',        sets:3, reps:'5–8'},
+      {id:'incline_fly',   name:'Incline Dumbbell Fly',       sets:2, reps:'8–10'},
+      {id:'oh_press',      name:'Overhead Machine Press',     sets:3, reps:'6–8'},
+      {id:'lateral',       name:'DB Lateral Raise',           sets:3, reps:'10–12'},
+      {id:'oh_cable_ext',  name:'Overhead Cable Extension',   sets:2, reps:'8–10'},
+      {id:'jm_press',      name:'Smith Machine JM Press',     sets:2, reps:'8–10'}
+    ]},
+  pull:{name:'Pull', emoji:'🏋️', focus:'Rygg · Nakke · Biceps — media-kroppen',
+    ex:[
+      {id:'wide_row',      name:'Wide Grip Machine Row',      sets:3, reps:'5–8'},
+      {id:'single_pd',     name:'Single Arm Pulldown',        sets:2, reps:'6–8'},
+      {id:'tbar_row',      name:'Chest Supported T-Bar Row',  sets:2, reps:'6–8'},
+      {id:'rear_delt',     name:'Reverse Pec Deck',           sets:2, reps:'12–15'},
+      {id:'shrug',         name:'Dumbbell Shrug',             sets:2, reps:'8–10'},
+      {id:'cable_curl',    name:'Cable Curl',                 sets:3, reps:'8–10'},
+      {id:'hammer_curl',   name:'DB Hammer Curl',             sets:2, reps:'8–10'}
+    ]},
+  bein:{name:'Bein Fjell', emoji:'🏔️', focus:'Fjellspisset: steg, ettbeins, legger, tibialis, core',
+    ex:[
+      {id:'stepup',        name:'DB Step-up (høy kasse)',     sets:3, reps:'8/bein'},
+      {id:'bulgarian',     name:'DB Bulgarian Split Squat',   sets:2, reps:'8/bein'},
+      {id:'rdl',           name:'Romanian Deadlift',          sets:2, reps:'6–8'},
+      {id:'leg_press',     name:'Leg Press',                  sets:2, reps:'8–10'},
+      {id:'calf',          name:'Stående tåhev',              sets:3, reps:'10–12'},
+      {id:'tibialis',      name:'Tibialis Raise',             sets:2, reps:'15'},
+      {id:'hang_leg',      name:'Hanging Leg Raise',          sets:3, reps:'10'}
+    ]}
+};
+
+// Kcal-mål: man–fre 2300 · lør 2600 · søn 2100 · diet break 2900 · fyllmodus 3000
+function kcalTarget(week, dayIdx){
+  if (DIET_BREAK_WEEKS.includes(week)) return 2900;
+  if (week === 15 && dayIdx >= 3) return 3000; // fyllmodus fra torsdag uke 15
+  if (dayIdx === 5) return 2600;
+  if (dayIdx === 6) return 2100;
+  return 2300;
+}
+
+// Måltider per ukedag — 2 måltider, enkle, gjentakende. Smør/EVOO, aldri frøoljer.
+const MEALS = [
+  [ // Mandag
+    {name:'Kylling, ris & brokkoli', emoji:'🍗', kcal:1150, protein:92, carbs:80, fat:32,
+     ing:['350 g kyllingfilet','90 g jasminris (tørrvekt)','15 g smør','300 g brokkoli','Salt, pepper, paprikakrydder'],
+     steps:['Kok risen. Stek kyllingen i smør.','Damp brokkolien. Salt godt.','Alt på én tallerken. Ferdig på 20 min.']},
+    {name:'Skyr-bolle + egg', emoji:'🥣', kcal:1150, protein:86, carbs:52, fat:56,
+     ing:['500 g skyr naturell','150 g økologiske blåbær','30 g valnøtter','1 ss honning','3 egg (kokt eller stekt i smør)'],
+     steps:['Skyr i bolle, blåbær, valnøtter og honning på topp.','Eggene ved siden av. 5 minutter totalt.']}
+  ],
+  [ // Tirsdag
+    {name:'Karbonader & poteter', emoji:'🥩', kcal:1150, protein:90, carbs:78, fat:40,
+     ing:['400 g karbonadedeig','1 egg (bindemiddel)','450 g kokte poteter','Gulrot og erter','10 g smør, salt, pepper'],
+     steps:['Bland deig, egg og krydder. Form karbonader.','Stek i smør 3–4 min per side.','Kok poteter og grønnsaker.']},
+    {name:'Bacon-omelett & skyr', emoji:'🍳', kcal:1150, protein:78, carbs:18, fat:74,
+     ing:['4 egg','80 g nitrittfri bacon','50 g revet ost','½ avokado','200 g skyr til slutt'],
+     steps:['Stek bacon, hell over eggene, ost på topp.','Avokado ved siden. Skyr som dessert.']}
+  ],
+  [ // Onsdag
+    {name:'Laks & poteter', emoji:'🐟', kcal:1150, protein:70, carbs:70, fat:56,
+     ing:['300 g laksefilet','450 g poteter','15 g smør','Asparges eller grønne bønner','Sitron, salt'],
+     steps:['Laks i ovn 200 °C i 15–18 min.','Kok poteter, smørdamp grønnsakene.']},
+    {name:'Skyr-bolle + egg', emoji:'🥣', kcal:1150, protein:85, carbs:52, fat:52,
+     ing:['600 g skyr naturell','3 egg (kokt eller stekt i smør)','150 g økologiske blåbær','30 g valnøtter','1 ss honning'],
+     steps:['Skyr-bolle som vanlig, eggene ved siden.','Egg = enkleste fettkilden i kuttet — 3–4 egg hver dag gjennom uka.']}
+  ],
+  [ // Torsdag
+    {name:'Kylling, ris & brokkoli', emoji:'🍗', kcal:1150, protein:92, carbs:80, fat:32,
+     ing:['350 g kyllingfilet','90 g jasminris (tørrvekt)','15 g smør','300 g brokkoli','Salt, pepper'],
+     steps:['Samme som mandag. Repetisjon = null friksjon.']},
+    {name:'Cottage cheese & egg', emoji:'🥚', kcal:1150, protein:88, carbs:24, fat:66,
+     ing:['400 g cottage cheese','3 egg','Cherrytomater','1 ss Muraglia EVOO','Salt, pepper'],
+     steps:['Kok/stek eggene.','Cottage cheese med tomat, olivenolje og salt.']}
+  ],
+  [ // Fredag
+    {name:'Elgburgere', emoji:'🍔', kcal:1150, protein:76, carbs:66, fat:52,
+     ing:['300 g elg- eller storfekjøttdeig','2 fullkornsbun','1 egg','Salat, tomat, rødløk','2 ss rømme'],
+     steps:['Bland deig og egg, form 2 burgere.','Stek 4–5 min per side i tørr panne.','Bygg burgerne. Fredagsfølelse uten dritt.']},
+    {name:'Skyr-bolle + egg', emoji:'🥣', kcal:1150, protein:86, carbs:52, fat:56,
+     ing:['500 g skyr naturell','150 g økologiske blåbær','30 g valnøtter','1 ss honning','3 egg'],
+     steps:['Samme som mandag kveld.']}
+  ],
+  [ // Lørdag — turdag 2600
+    {name:'Havregrøt & egg (før tur)', emoji:'🌄', kcal:1150, protein:58, carbs:120, fat:42,
+     ing:['100 g havregryn (kokt på vann)','150 g økologiske blåbær','1 ss honning','4 egg','Turmat i sekken: 1 banan + 50 g nøtter'],
+     steps:['Spis 1,5–2 t før turen.','Turmaten spises underveis — den er en del av dagens kcal.']},
+    {name:'Kjøttdeiggryte & ris (etter tur)', emoji:'🍲', kcal:1450, protein:96, carbs:110, fat:56,
+     ing:['400 g kjøttdeig','100 g ris (tørrvekt)','1 boks hermetiske tomater','1 løk','15 g smør, hvitløk, oregano'],
+     steps:['Brun kjøttdeig og løk i smør.','Tomater og krydder i, småkok 10 min.','Server over ris. Stor porsjon — du har fortjent den.']}
+  ],
+  [ // Søndag — hviledag 2100
+    {name:'Ørret & grønnsaker', emoji:'🐟', kcal:1050, protein:68, carbs:58, fat:52,
+     ing:['300 g ørret- eller laksefilet','350 g poteter','Smørdampede grønnsaker','Sitron'],
+     steps:['Fisk i ovn, poteter i kjele, grønnsaker i smør.']},
+    {name:'Omelett & skyr', emoji:'🍳', kcal:1050, protein:82, carbs:34, fat:54,
+     ing:['3 egg','30 g ost','400 g skyr','100 g økologiske blåbær'],
+     steps:['Omelett i smør.','Skyr med blåbær etterpå. Lett dag — i morgen starter ny uke.']}
+  ]
+];
+
+const SUPPS = [
+  {key:'morgen', name:'Morgen (fastende)', items:'Boron · Lion\u2019s Mane · Vitamin C · Methyl B / Multi'},
+  {key:'middag', name:'Etter måltid 2', items:'Rosita CLO · Magnesium · D3 · K2 · Selen · Kalium · CoQ10 · Kreatin'},
+  {key:'kveld',  name:'Før leggetid', items:'Magnesium · Sink · Kalium · Glysin · Taurin · Kollagen'}
+];
+
+// ============================================================
+// STATE + STORAGE
+// ============================================================
+let S = { page:'home', sub:null, viewWeek:null, activeWO:null, foodDay:null };
+
+function load(k,d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch{ return d; } }
+function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+
+let settings   = load('sfa_settings', { name:'Leif', workerUrl:'', benchmarkRoute:'' });
+let wlog       = load('sfa_wlog', []);   // [{date, type, key?, data}]
+let nlog       = load('sfa_nlog', {});   // { 'YYYY-MM-DD': {m1:bool, m2:bool} }
+let plog       = load('sfa_plog', []);   // [{date, weight?, sleep?, source?}]
+let supps      = load('sfa_supps', {});  // { date: {morgen,middag,kveld} }
+let photos     = load('sfa_photos', {}); // { week: true }
+
+const saveAll = () => { save('sfa_settings',settings); save('sfa_wlog',wlog); save('sfa_nlog',nlog); save('sfa_plog',plog); save('sfa_supps',supps); save('sfa_photos',photos); };
+
+// ============================================================
+// HELPERS
+// ============================================================
+const pad = n => String(n).padStart(2,'0');
+const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
+const dayIdxOf = d => (d.getDay()+6)%7;
+const DAYS = ['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
+
+function currentWeek(){
+  const diff = Math.floor((new Date().setHours(0,0,0,0) - START.getTime()) / 864e5);
+  if (diff < 0) return 0;
+  return Math.min(Math.floor(diff/7)+1, TOTAL_WEEKS+1);
+}
+function daysToTrip(){ return Math.max(0, Math.ceil((TRIP.getTime() - new Date().setHours(0,0,0,0)) / 864e5)); }
+function phaseOf(w){ return PHASES.find(p => w>=p.weeks[0] && w<=p.weeks[1]) || (w<1 ? PHASES[0] : PHASES[3]); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function latestWeight(){
+  const w = plog.filter(p=>p.weight!=null).sort((a,b)=>a.date<b.date?1:-1);
+  return w[0] || null;
+}
+function targetWeightOn(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const total = (TRIP-START)/864e5;
+  const gone = Math.min(Math.max((d-START)/864e5,0), total);
+  return WEIGHT_START - (WEIGHT_START-WEIGHT_GOAL)*(gone/total);
+}
+function prFor(exId){
+  let best = 0;
+  wlog.filter(w=>w.type==='gym').forEach(w => (w.data.exercises||[]).forEach(e=>{
+    if(e.id===exId) e.sets.forEach(s=>{ if(s.kg>best) best=s.kg; });
+  }));
+  return best;
+}
+function toast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),1800);
+}
+
+// ============================================================
+// WITHINGS (via Cloudflare Worker)
+// ============================================================
+async function syncWithings(){
+  if(!settings.workerUrl) return;
+  try{
+    const r = await fetch(settings.workerUrl.replace(/\/$/,'') + '/weight');
+    if(!r.ok) return;
+    const d = await r.json(); // {weight: 85.4, date: 'YYYY-MM-DD'}
+    if(d && d.weight){
+      const existing = plog.find(p=>p.date===d.date);
+      if(existing){ if(existing.weight !== d.weight){ existing.weight = d.weight; existing.source='withings'; saveAll(); render(); } }
+      else { plog.push({date:d.date, weight:d.weight, source:'withings'}); saveAll(); render(); }
+    }
+  }catch{}
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render(){
+  const el = document.getElementById('app');
+  const pages = { home:pageHome, training:pageTraining, food:pageFood, progress:pageProgress, settings:pageSettings,
+                  gymDetail:pageGymDetail, activeWO:pageActiveWO, cardioLog:pageCardioLog, hikeLog:pageHikeLog };
+  el.innerHTML = (pages[S.page]||pageHome)();
+  el.className = 'fade';
+  ['home','training','food','progress'].forEach(p=>{
+    const b=document.getElementById('nav-'+p);
+    if(b) b.classList.toggle('active', S.page===p || (S.page.startsWith('gym')&&p==='training') || (['activeWO','cardioLog','hikeLog'].includes(S.page)&&p==='training'));
+  });
+  window.scrollTo(0,0);
+}
+function gotoPage(p, sub){ S.page=p; S.sub=sub??null; render(); }
+
+// ------------------------------------------------------------
+// SIGNATUR: Atlas-ryggen — 15 uker som stigende fjellprofil
+// ------------------------------------------------------------
+function ridgeSVG(){
+  const w=398, h=104, baseY=88;
+  const cw = currentWeek();
+  const pts = [];
+  for(let i=0;i<=TOTAL_WEEKS;i++){
+    const x = 8 + (w-40)*(i/TOTAL_WEEKS);
+    const climb = (i/TOTAL_WEEKS)*58;
+    const jag = (i%2===0? 0 : 7) + (i%5===0? -4:0);
+    pts.push([x, baseY - climb + (i===0?0:jag)]);
+  }
+  const peakX = pts[TOTAL_WEEKS][0], peakY = pts[TOTAL_WEEKS][1];
+  const line = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const doneIdx = Math.min(Math.max(cw-1,0)+((dayIdxOf(new Date())+1)/7), TOTAL_WEEKS);
+  const donePts = pts.filter((_,i)=>i<=Math.floor(doneIdx));
+  let doneLine='';
+  if(donePts.length>1){
+    doneLine = donePts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+    if(doneIdx%1>0 && Math.floor(doneIdx)<TOTAL_WEEKS){
+      const a=pts[Math.floor(doneIdx)], b=pts[Math.floor(doneIdx)+1], t=doneIdx%1;
+      doneLine += ' L'+(a[0]+(b[0]-a[0])*t).toFixed(1)+' '+(a[1]+(b[1]-a[1])*t).toFixed(1);
+    }
+  }
+  const markIdx = Math.min(doneIdx, TOTAL_WEEKS);
+  const mi = Math.min(Math.floor(markIdx), TOTAL_WEEKS-1);
+  const ma=pts[mi], mb=pts[Math.min(mi+1,TOTAL_WEEKS)], mt=markIdx-mi;
+  const mx=ma[0]+(mb[0]-ma[0])*mt, my=ma[1]+(mb[1]-ma[1])*mt;
+  const phaseTicks = PHASES.map(p=>{
+    const x = 8 + (w-40)*((p.weeks[0]-1)/TOTAL_WEEKS);
+    return '<text x="'+x+'" y="'+(h-2)+'" fill="var(--text3)" font-size="8.5" font-family="Outfit" font-weight="700" letter-spacing="1">'+p.name.toUpperCase()+'</text>';
+  }).join('');
+  return '<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;display:block" role="img" aria-label="Fremdrift mot Atlas">'
+    + '<path d="'+line+' L'+pts[TOTAL_WEEKS][0]+' '+baseY+' L8 '+baseY+' Z" fill="var(--card2)" opacity="0.6"/>'
+    + '<path d="'+line+'" fill="none" stroke="var(--line)" stroke-width="2"/>'
+    + (doneLine? '<path d="'+doneLine+'" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"/>' : '')
+    + '<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="4.5" fill="var(--gold)"/>'
+    + '<path d="M'+peakX+' '+peakY+' v-14 l9 3.5 -9 3.5" fill="var(--gold)" stroke="var(--gold)" stroke-width="1.5" stroke-linejoin="round"/>'
+    + phaseTicks
+    + '</svg>';
+}
+
+// ------------------------------------------------------------
+// HJEM
+// ------------------------------------------------------------
+function pageHome(){
+  const cw = currentWeek();
+  const di = dayIdxOf(new Date());
+  const ph = phaseOf(cw);
+  const sess = WEEK_TEMPLATE[di];
+  const t = todayStr();
+  const meals = MEALS[di];
+  const nToday = nlog[t] || {};
+  const sToday = supps[t] || {};
+  const pToday = plog.find(p=>p.date===t) || {};
+  const lw = latestWeight();
+  const kcal = kcalTarget(Math.max(cw,1), di);
+  const preStart = cw===0;
+  const db = DIET_BREAK_WEEKS.includes(cw);
+  const fyll = cw===15 && di>=3;
+
+  return `
+  <div class="spread" style="margin-bottom:10px">
+    <div>
+      <div class="tiny">SOLFIT <span style="color:var(--gold)">ATLAS</span></div>
+      <h1>${esc(settings.name)}</h1>
+    </div>
+    <button class="gear" onclick="gotoPage('settings')" aria-label="Innstillinger">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <div class="card" style="padding:14px 14px 8px">
+    <div class="spread" style="margin-bottom:6px">
+      <div><span class="mono" style="font-size:30px;font-weight:700;color:var(--gold)">${daysToTrip()}</span> <span class="muted">dager til Atlas</span></div>
+      <span class="badge gold">${preStart?'Pre-start':'Uke '+cw+' · '+ph.name}</span>
+    </div>
+    ${ridgeSVG()}
+    ${db? '<div class="tiny" style="color:var(--green);margin-top:4px">🟢 DIET BREAK-UKE — spis på vedlikehold (2900 kcal), tren som normalt</div>':''}
+    ${fyll? '<div class="tiny" style="color:var(--gold);margin-top:4px">⚡ FYLLMODUS — karb opp, glykogen inn. Full på kamera fra dag én.</div>':''}
+    ${preStart? '<div class="tiny" style="margin-top:4px">Programstart mandag 13. juli — bruk dagene til handling og en rolig testtur.</div>':''}
+  </div>
+
+  <h2>Dagens økt — ${DAYS[di]}</h2>
+  ${sessionHero(cw||1, di, sess)}
+
+  <h2>Dagens mat · ${kcal} kcal</h2>
+  ${meals.map((m,i)=>{
+    const done = nToday['m'+(i+1)];
+    return `<div class="card" style="padding:13px 14px">
+      <div class="row">
+        <div style="font-size:24px">${m.emoji}</div>
+        <div style="flex:1" onclick="S.foodDay=${di};gotoPage('food')">
+          <div style="font-weight:700">${i===0?'Måltid 1':'Måltid 2'} · ${esc(m.name)}</div>
+          <div class="tiny mono">${m.kcal} kcal · ${m.protein}g protein</div>
+        </div>
+        <div class="check ${done?'on':''}" role="button" aria-label="Marker måltid" onclick="toggleMeal('${t}',${i+1})">✓</div>
+      </div>
+    </div>`;
+  }).join('')}
+
+  <h2>Hurtiglogg</h2>
+  <div class="card">
+    <div class="spread">
+      <div>
+        <div style="font-weight:700">Vekt i dag</div>
+        <div class="tiny">${pToday.weight? '<span class="mono" style="color:var(--gold)">'+pToday.weight+' kg</span>'+(pToday.source==='withings'?' · fra Withings':'') : (settings.workerUrl?'Venter på Withings…':'Ikke logget')}</div>
+      </div>
+      <div class="row" style="gap:8px">
+        <input type="number" step="0.1" inputmode="decimal" id="wIn" placeholder="${lw?lw.weight:WEIGHT_START}" style="width:86px;text-align:center">
+        <button class="btn sm" onclick="logWeight()">Lagre</button>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--line);margin:12px 0"></div>
+    <div class="spread">
+      <div style="font-weight:700">Søvn i natt</div>
+      <div class="row" style="gap:6px">
+        ${[1,2,3,4,5].map(n=>`<button class="week-pill ${pToday.sleep===n?'sel':''}" style="min-width:34px" onclick="logSleep(${n})">${n}</button>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <h2>Supplements</h2>
+  <div class="card" style="padding:6px 14px">
+    ${SUPPS.map(g=>`<div class="list-item">
+      <div class="check green ${sToday[g.key]?'on':''}" role="button" onclick="toggleSupp('${t}','${g.key}')">✓</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px">${g.name}</div>
+        <div class="tiny">${g.items}</div>
+      </div>
+    </div>`).join('')}
+  </div>
+
+  ${di===6? `<div class="card card2" style="border-color:var(--gold2)">
+    <div class="row">
+      <div style="font-size:22px">📸</div>
+      <div style="flex:1">
+        <div style="font-weight:700">Søndag = progressbilde</div>
+        <div class="tiny">Samme lys, samme vinkel. Uke ${Math.max(cw,1)} av 15.</div>
+      </div>
+      <div class="check ${photos[Math.max(cw,1)]?'on':''}" role="button" onclick="togglePhoto(${Math.max(cw,1)})">✓</div>
+    </div>
+  </div>`:''}
+  `;
+}
+
+function sessionHero(week, dayIdx, sess){
+  const ph = phaseOf(week);
+  let cls='gym', body='', action='';
+  if(sess.type==='gym'){
+    const wo = GYM[sess.key];
+    body = `<div style="font-weight:800;font-size:20px;text-transform:uppercase;font-style:italic">${wo.emoji} ${wo.name}</div>
+            <div class="muted" style="margin:4px 0 2px">${wo.focus}</div>
+            <div class="tiny">${sess.finisher}</div>`;
+    action = `<button class="btn" style="margin-top:12px" onclick="startGym('${sess.key}')">Start økt</button>`;
+  } else if(sess.type==='z2'){
+    cls='cardio'; const c = CARDIO.z2[ph.id];
+    body = `<div style="font-weight:800;font-size:20px;text-transform:uppercase;font-style:italic;color:var(--sky)">🫁 Sone 2</div>
+            <div class="muted" style="margin:4px 0 2px">Mølle ${c.inc} stigning · ${c.min} min</div>
+            <div class="tiny">${c.note}</div>`;
+    action = `<button class="btn" style="margin-top:12px;background:var(--sky)" onclick="gotoPage('cardioLog','z2')">Logg økta</button>`;
+  } else if(sess.type==='int'){
+    cls='cardio'; const c = CARDIO.int[ph.id];
+    body = `<div style="font-weight:800;font-size:20px;text-transform:uppercase;font-style:italic;color:var(--sky)">🔥 Intervaller ${c.reps}</div>
+            <div class="muted" style="margin:4px 0 2px">Sykkel eller mølle med stigning</div>
+            <div class="tiny">${c.note}</div>`;
+    action = `<button class="btn" style="margin-top:12px;background:var(--sky)" onclick="gotoPage('cardioLog','int')">Logg økta</button>`;
+  } else if(sess.type==='hike'){
+    cls='cardio'; const hk = HIKES[Math.max(week,1)] || HIKES[1];
+    body = `<div style="font-weight:800;font-size:20px;text-transform:uppercase;font-style:italic;color:var(--sky)">⛰️ Langtur</div>
+            <div class="row" style="gap:8px;margin:8px 0 4px">
+              <div class="stat"><div class="v">${hk.h}</div><div class="l">Varighet</div></div>
+              <div class="stat"><div class="v">${hk.pack} kg</div><div class="l">Sekk</div></div>
+              <div class="stat"><div class="v">${hk.elev}</div><div class="l">Høydemeter</div></div>
+            </div>
+            <div class="tiny">${hk.note}</div>`;
+    action = `<button class="btn" style="margin-top:12px;background:var(--sky)" onclick="gotoPage('hikeLog')">Logg turen</button>`;
+  } else {
+    cls='rest';
+    body = `<div style="font-weight:800;font-size:20px;text-transform:uppercase;font-style:italic;color:var(--green)">😴 Hvile</div>
+            <div class="muted" style="margin:4px 0 2px">Restitusjon er der fremgangen skjer.</div>
+            <div class="tiny">${week===13?'Toppuke: valgfri rolig 1,5 t gåtur i dag (back-to-back-trening for Atlas).':'Rolig gåtur er lov. Trening er ikke.'}</div>`;
+  }
+  return `<div class="session-hero ${cls}">${body}${action}</div>`;
+}
+
+// ------------------------------------------------------------
+// TRENING
+// ------------------------------------------------------------
+function pageTraining(){
+  const cw = Math.max(currentWeek(),1);
+  if(S.viewWeek==null) S.viewWeek = Math.min(cw, TOTAL_WEEKS);
+  const w = S.viewWeek;
+  const ph = phaseOf(w);
+  const hk = HIKES[w];
+  const doneToday = key => wlog.some(x=>x.date===todayStr() && (x.key===key || x.type===key));
+  return `
+  <h1>Trening</h1>
+  <div class="hscroll" style="margin:12px 0">
+    ${Array.from({length:TOTAL_WEEKS},(_,i)=>i+1).map(n=>
+      `<div class="week-pill ${n===w?'sel':(n===cw?'cur':'')}" onclick="S.viewWeek=${n};render()">${n}</div>`).join('')}
+  </div>
+  <div class="card card2">
+    <div class="spread">
+      <div style="font-weight:800;text-transform:uppercase;font-style:italic">Uke ${w} · ${ph.name}</div>
+      ${DIET_BREAK_WEEKS.includes(w)?'<span class="badge green">Diet break</span>':''}
+      ${BENCHMARK_WEEKS.includes(w)?'<span class="badge gold">Benchmark</span>':''}
+    </div>
+    <div class="muted" style="margin-top:4px">${ph.desc}</div>
+  </div>
+
+  ${WEEK_TEMPLATE.map((s,di)=>{
+    let detail='', tag='';
+    if(s.type==='gym'){ tag='<span class="badge gold">Styrke</span>'; detail=GYM[s.key].focus; }
+    else if(s.type==='z2'){ const c=CARDIO.z2[ph.id]; tag='<span class="badge sky">Kondis</span>'; detail=c.min+' min · mølle '+c.inc+' stigning'; }
+    else if(s.type==='int'){ const c=CARDIO.int[ph.id]; tag='<span class="badge sky">Kondis</span>'; detail=c.reps+' · sykkel/mølle'; }
+    else if(s.type==='hike'){ tag='<span class="badge sky">Fjell</span>'; detail=hk.h+' · '+hk.pack+' kg sekk · '+hk.elev+' hm'; }
+    else { tag='<span class="badge green">Hvile</span>'; detail = w===13?'Valgfri rolig 1,5 t gåtur':'Full restitusjon'; }
+    const click = s.type==='gym' ? `onclick="gotoPage('gymDetail','${s.key}')"` :
+                  s.type==='z2'||s.type==='int' ? `onclick="gotoPage('cardioLog','${s.type}')"` :
+                  s.type==='hike' ? `onclick="gotoPage('hikeLog')"` : '';
+    return `<div class="card" style="padding:13px 14px;cursor:${click?'pointer':'default'}" ${click}>
+      <div class="spread">
+        <div>
+          <div class="tiny">${DAYS[di].toUpperCase()}</div>
+          <div style="font-weight:700">${s.name}</div>
+          <div class="tiny" style="margin-top:2px">${detail}${s.finisher? ' · '+s.finisher:''}</div>
+        </div>
+        ${tag}
+      </div>
+    </div>`;
+  }).join('')}
+
+  <h2>Siste økter</h2>
+  ${wlog.slice(-5).reverse().map(x=>{
+    let n = x.type==='gym'? GYM[x.key].name : x.type==='z2'?'Sone 2': x.type==='int'?'Intervaller': x.type==='hike'?'Langtur':'Økt';
+    let d = x.type==='hike'? (x.data.hm||0)+' hm · '+(x.data.pack||0)+' kg sekk' :
+            x.type==='gym'? (x.data.exercises||[]).length+' øvelser' :
+            (x.data.min||0)+' min';
+    return `<div class="card" style="padding:11px 14px"><div class="spread"><div style="font-weight:600">${n}</div><div class="tiny mono">${x.date} · ${d}</div></div></div>`;
+  }).join('') || '<div class="muted">Ingen økter logget ennå. Første økt starter mandag 13. juli.</div>'}
+  `;
+}
+
+function pageGymDetail(){
+  const wo = GYM[S.sub];
+  return `
+  <button class="btn ghost sm" onclick="gotoPage('training')">← Tilbake</button>
+  <h1 style="margin-top:12px">${wo.emoji} ${wo.name}</h1>
+  <div class="muted" style="margin:4px 0 14px">${wo.focus}</div>
+  <div class="card" style="padding:6px 14px">
+    ${wo.ex.map(e=>{
+      const pr = prFor(e.id);
+      return `<div class="list-item">
+        <div style="flex:1">
+          <div style="font-weight:600">${e.name}</div>
+          <div class="tiny">${e.sets} sett × ${e.reps}${pr?' · PR: <span style="color:var(--gold)">'+pr+' kg</span>':''}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="tiny" style="margin:4px 0 12px">Deload-uker (7 og 12): dropp siste sett på hver øvelse. Alle sett til 1–2 reps fra feil.</div>
+  <button class="btn" onclick="startGym('${S.sub}')">Start økt</button>
+  `;
+}
+
+function startGym(key){
+  const wo = GYM[key];
+  S.activeWO = { key, start:Date.now(),
+    exercises: wo.ex.map(e=>({id:e.id, name:e.name, sets:Array.from({length:e.sets},()=>({kg:'',reps:'',done:false})) })) };
+  gotoPage('activeWO');
+}
+
+function pageActiveWO(){
+  const a = S.activeWO; if(!a) return pageTraining();
+  const wo = GYM[a.key];
+  return `
+  <div class="spread">
+    <h1>${wo.emoji} ${wo.name}</h1>
+    <button class="btn dim sm" onclick="if(confirm('Avbryte økta?')){S.activeWO=null;gotoPage('training')}">Avbryt</button>
+  </div>
+  <div class="tiny" style="margin:4px 0 14px">Fyll inn kg og reps per sett. Hvil 2–3 min på tunge sett.</div>
+  ${a.exercises.map((e,ei)=>{
+    const def = wo.ex[ei];
+    const last = prFor(e.id);
+    return `<div class="card">
+      <div style="font-weight:700;margin-bottom:2px">${e.name}</div>
+      <div class="tiny" style="margin-bottom:10px">Mål: ${def.reps} reps${last?' · PR '+last+' kg':''}</div>
+      <div class="set-grid tiny" style="margin-bottom:4px"><div>#</div><div style="text-align:center">KG</div><div style="text-align:center">REPS</div><div></div></div>
+      ${e.sets.map((s,si)=>`<div class="set-grid">
+        <div class="mono tiny">${si+1}</div>
+        <input type="number" inputmode="decimal" value="${s.kg}" onchange="S.activeWO.exercises[${ei}].sets[${si}].kg=parseFloat(this.value)||''">
+        <input type="number" inputmode="numeric" value="${s.reps}" onchange="S.activeWO.exercises[${ei}].sets[${si}].reps=parseInt(this.value)||''">
+        <div class="check ${s.done?'on':''}" onclick="S.activeWO.exercises[${ei}].sets[${si}].done=!S.activeWO.exercises[${ei}].sets[${si}].done;render()">✓</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('')}
+  <button class="btn" onclick="finishGym()">Fullfør økt</button>
+  `;
+}
+
+function finishGym(){
+  const a = S.activeWO;
+  const ex = a.exercises.map(e=>({id:e.id, sets:e.sets.filter(s=>s.kg&&s.reps).map(s=>({kg:+s.kg, reps:+s.reps}))})).filter(e=>e.sets.length);
+  wlog.push({date:todayStr(), type:'gym', key:a.key, data:{exercises:ex, min:Math.round((Date.now()-a.start)/60000)}});
+  S.activeWO=null; saveAll(); toast('Økt lagret 💪'); gotoPage('training');
+}
+
+function pageCardioLog(){
+  const type = S.sub || 'z2';
+  const ph = phaseOf(Math.max(currentWeek(),1));
+  const c = CARDIO[type][ph.id];
+  const isZ2 = type==='z2';
+  return `
+  <button class="btn ghost sm" onclick="gotoPage('training')">← Tilbake</button>
+  <h1 style="margin-top:12px;color:var(--sky)">${isZ2?'🫁 Sone 2':'🔥 Intervaller'}</h1>
+  <div class="card card2" style="margin-top:10px">
+    <div style="font-weight:700">${isZ2? c.min+' min · mølle '+c.inc+' stigning' : c.reps}</div>
+    <div class="muted" style="margin-top:4px">${c.note}</div>
+  </div>
+  <div class="card">
+    <label>Minutter totalt</label><input type="number" inputmode="numeric" id="cMin" value="${isZ2?c.min:''}">
+    <label>${isZ2?'Stigning % / fart':'Antall drag × fart/watt'}</label><input id="cDet" placeholder="${isZ2?'12 % · 5,2 km/t':'4 × 4 min · 300 W'}">
+    <label>Snittpuls (valgfritt)</label><input type="number" inputmode="numeric" id="cHr" placeholder="145">
+    <label>Notat</label><input id="cNote" placeholder="Føltes lett / tungt…">
+  </div>
+  <button class="btn" style="background:var(--sky)" onclick="saveCardio('${type}')">Lagre økt</button>
+  `;
+}
+function saveCardio(type){
+  wlog.push({date:todayStr(), type, data:{
+    min:+document.getElementById('cMin').value||0,
+    detail:document.getElementById('cDet').value,
+    hr:+document.getElementById('cHr').value||null,
+    note:document.getElementById('cNote').value }});
+  saveAll(); toast('Kondisøkt lagret 🫁'); gotoPage('training');
+}
+
+function pageHikeLog(){
+  const w = Math.max(currentWeek(),1);
+  const hk = HIKES[Math.min(w,TOTAL_WEEKS)];
+  const bench = BENCHMARK_WEEKS.includes(w);
+  return `
+  <button class="btn ghost sm" onclick="gotoPage('training')">← Tilbake</button>
+  <h1 style="margin-top:12px;color:var(--sky)">⛰️ Langtur — uke ${w}</h1>
+  <div class="card card2" style="margin-top:10px">
+    <div style="font-weight:700">${hk.h} · ${hk.pack} kg sekk · ${hk.elev} hm</div>
+    <div class="muted" style="margin-top:4px">${hk.note}</div>
+    ${bench? `<div class="tiny" style="color:var(--gold);margin-top:6px">⭐ Benchmark-uke — gå ruta: ${esc(settings.benchmarkRoute||'sett benchmarkrute i innstillinger')}</div>`:''}
+  </div>
+  <div class="card">
+    <label>Tid (minutter)</label><input type="number" inputmode="numeric" id="hMin" placeholder="150">
+    <label>Distanse (km)</label><input type="number" step="0.1" inputmode="decimal" id="hKm" placeholder="10.5">
+    <label>Høydemeter</label><input type="number" inputmode="numeric" id="hHm" value="${hk.elev}">
+    <label>Sekkvekt (kg)</label><input type="number" step="0.5" inputmode="decimal" id="hPack" value="${hk.pack}">
+    <label>Notat</label><input id="hNote" placeholder="Rute, føre, form…">
+  </div>
+  <button class="btn" style="background:var(--sky)" onclick="saveHike(${bench})">Lagre tur</button>
+  `;
+}
+function saveHike(bench){
+  wlog.push({date:todayStr(), type:'hike', data:{
+    min:+document.getElementById('hMin').value||0,
+    km:+document.getElementById('hKm').value||0,
+    hm:+document.getElementById('hHm').value||0,
+    pack:+document.getElementById('hPack').value||0,
+    note:document.getElementById('hNote').value,
+    benchmark:bench, week:Math.max(currentWeek(),1) }});
+  saveAll(); toast('Tur lagret ⛰️'); gotoPage('training');
+}
+
+// ------------------------------------------------------------
+// MAT
+// ------------------------------------------------------------
+function pageFood(){
+  const cw = Math.max(currentWeek(),1);
+  const todayIdx = dayIdxOf(new Date());
+  if(S.foodDay==null) S.foodDay = todayIdx;
+  const di = S.foodDay;
+  const meals = MEALS[di];
+  const t = todayStr();
+  const nToday = nlog[t]||{};
+  const kcal = kcalTarget(cw, di);
+  const db = DIET_BREAK_WEEKS.includes(cw);
+  return `
+  <h1>Mat</h1>
+  <div class="hscroll" style="margin:12px 0">
+    ${DAYS.map((d,i)=>`<div class="week-pill ${i===di?'sel':(i===todayIdx?'cur':'')}" style="min-width:52px" onclick="S.foodDay=${i};render()">${d.slice(0,3)}</div>`).join('')}
+  </div>
+  <div class="card card2">
+    <div class="spread">
+      <div style="font-weight:800;font-style:italic;text-transform:uppercase">${DAYS[di]}</div>
+      <span class="badge gold mono">${kcal} kcal</span>
+    </div>
+    <div class="tiny" style="margin-top:4px">
+      ${db? 'Diet break: legg til ~150 g ekstra ris/poteter fordelt på måltidene.' :
+        di===5? 'Turdag — mer karb, turmaten teller med.' :
+        di===6? 'Hviledag — letteste dag i uka.' :
+        'Måltid 1 ca. kl. 16:30 · Måltid 2 ca. kl. 20:00. Vann, kaffe og te utenom.'}
+    </div>
+  </div>
+
+  ${meals.map((m,i)=>{
+    const done = di===todayIdx && nToday['m'+(i+1)];
+    return `<div class="card">
+      <div class="spread" style="margin-bottom:8px">
+        <div class="row" style="gap:10px">
+          <div style="font-size:26px">${m.emoji}</div>
+          <div>
+            <div class="tiny">MÅLTID ${i+1}</div>
+            <div style="font-weight:800;font-size:17px">${esc(m.name)}</div>
+          </div>
+        </div>
+        ${di===todayIdx? `<div class="check ${done?'on':''}" onclick="toggleMeal('${t}',${i+1})">✓</div>`:''}
+      </div>
+      <div class="macro-bar">
+        <div class="macro"><div class="v" style="color:var(--gold)">${m.kcal}</div><div class="l">kcal</div></div>
+        <div class="macro"><div class="v">${m.protein}g</div><div class="l">protein</div></div>
+        <div class="macro"><div class="v">${m.carbs}g</div><div class="l">karb</div></div>
+        <div class="macro"><div class="v">${m.fat}g</div><div class="l">fett</div></div>
+      </div>
+      <div style="margin-top:12px">
+        ${m.ing.map(x=>`<div class="tiny" style="padding:3px 0;color:var(--text2)">· ${esc(x)}</div>`).join('')}
+      </div>
+      <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
+        ${m.steps.map((x,n)=>`<div class="muted" style="padding:3px 0"><span class="mono" style="color:var(--gold)">${n+1}</span>&nbsp; ${esc(x)}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('')}
+
+  <div class="card card2">
+    <div style="font-weight:700;margin-bottom:4px">Faste regler</div>
+    <div class="tiny" style="line-height:1.7">
+      · Kun smør, Muraglia EVOO eller ghee — aldri frøoljer<br>
+      · Nitrittfri bacon · økologiske blåbær · ingen maltodekstrin/sitronsyre<br>
+      · Protein-mål: 175–185 g hver dag, uansett<br>
+      · Sulten mellom måltidene? Vann, salt, svart kaffe. Det går over.
+    </div>
+  </div>
+  `;
+}
+
+function toggleMeal(date, n){
+  nlog[date] = nlog[date]||{};
+  nlog[date]['m'+n] = !nlog[date]['m'+n];
+  saveAll(); render();
+}
+function toggleSupp(date, key){
+  supps[date] = supps[date]||{};
+  supps[date][key] = !supps[date][key];
+  saveAll(); render();
+}
+function togglePhoto(week){ photos[week]=!photos[week]; saveAll(); render(); }
+function logWeight(){
+  const v = parseFloat(document.getElementById('wIn').value);
+  if(!v || v<50 || v>150) return;
+  const t = todayStr();
+  const e = plog.find(p=>p.date===t);
+  if(e){ e.weight=v; e.source='manual'; } else plog.push({date:t, weight:v, source:'manual'});
+  saveAll(); toast('Vekt lagret'); render();
+}
+function logSleep(n){
+  const t = todayStr();
+  const e = plog.find(p=>p.date===t);
+  if(e) e.sleep=n; else plog.push({date:t, sleep:n});
+  saveAll(); render();
+}
+
+// ------------------------------------------------------------
+// FREMGANG
+// ------------------------------------------------------------
+function pageProgress(){
+  const weights = plog.filter(p=>p.weight!=null).sort((a,b)=>a.date<b.date?-1:1);
+  const lw = latestWeight();
+  const target = targetWeightOn(todayStr());
+  const diff = lw? (lw.weight-target) : null;
+  const hikes = wlog.filter(x=>x.type==='hike');
+  const benches = hikes.filter(h=>h.data.benchmark);
+  const totalHm = hikes.reduce((s,h)=>s+(h.data.hm||0),0);
+  const streak = calcStreak();
+  return `
+  <h1>Fremgang</h1>
+  <div class="row" style="gap:8px;margin:12px 0">
+    <div class="stat"><div class="v">${lw?lw.weight:'–'}</div><div class="l">kg nå</div></div>
+    <div class="stat"><div class="v">${WEIGHT_GOAL}</div><div class="l">kg mål</div></div>
+    <div class="stat"><div class="v" style="color:${diff==null?'var(--text2)':diff<=0.3?'var(--green)':'var(--red)'}">${diff==null?'–':(diff>0?'+':'')+diff.toFixed(1)}</div><div class="l">vs plan</div></div>
+    <div class="stat"><div class="v">${streak}</div><div class="l">dagers streak</div></div>
+  </div>
+
+  <div class="card">
+    <div class="spread" style="margin-bottom:8px">
+      <div style="font-weight:700">Vekt mot mål</div>
+      <span class="tiny mono">86 → 76 kg innen 27. okt</span>
+    </div>
+    ${weightChart(weights)}
+  </div>
+
+  <h2>Benchmarkruta</h2>
+  <div class="card" style="padding:6px 14px">
+    ${benches.length? benches.map(b=>`<div class="list-item">
+      <div style="flex:1">
+        <div style="font-weight:600">Uke ${b.data.week}</div>
+        <div class="tiny">${b.data.hm} hm · ${b.data.pack} kg sekk</div>
+      </div>
+      <div class="mono" style="color:var(--gold);font-weight:700">${Math.floor((b.data.min||0)/60)}:${pad((b.data.min||0)%60)}</div>
+    </div>`).join('') : '<div class="muted" style="padding:10px 0">Benchmark-uker: 3, 7, 11 og 14. Samme rute, samme sekk — tiden viser formen.</div>'}
+  </div>
+
+  <h2>Fjellstatistikk</h2>
+  <div class="row" style="gap:8px;margin-bottom:12px">
+    <div class="stat"><div class="v">${hikes.length}</div><div class="l">turer</div></div>
+    <div class="stat"><div class="v">${totalHm.toLocaleString('no')}</div><div class="l">hm totalt</div></div>
+    <div class="stat"><div class="v">${hikes.reduce((s,h)=>s+(h.data.km||0),0).toFixed(0)}</div><div class="l">km totalt</div></div>
+  </div>
+
+  <h2>Løfte-PRs</h2>
+  <div class="card" style="padding:6px 14px">
+    ${['machine_chest','oh_press','wide_row','stepup','rdl'].map(id=>{
+      const names={machine_chest:'Chest Press',oh_press:'Overhead Press',wide_row:'Wide Row',stepup:'Step-up',rdl:'RDL'};
+      const pr=prFor(id);
+      return `<div class="list-item"><div style="flex:1;font-weight:600">${names[id]}</div><div class="mono" style="color:var(--gold)">${pr?pr+' kg':'–'}</div></div>`;
+    }).join('')}
+  </div>
+
+  <h2>Progressbilder</h2>
+  <div class="card">
+    <div class="row" style="flex-wrap:wrap;gap:6px">
+      ${Array.from({length:TOTAL_WEEKS},(_,i)=>i+1).map(w=>
+        `<div class="week-pill ${photos[w]?'sel':''}" style="min-width:38px" onclick="togglePhoto(${w})">${w}</div>`).join('')}
+    </div>
+    <div class="tiny" style="margin-top:8px">Hver søndag: samme sted, samme lys, samme positur. Bildene lagrer du i kamerarullen — her huker du av.</div>
+  </div>
+
+  <h2>Data</h2>
+  <div class="row" style="gap:8px">
+    <button class="btn dim" onclick="exportData()">Eksporter JSON</button>
+    <button class="btn dim" onclick="document.getElementById('impFile').click()">Importer</button>
+    <input type="file" id="impFile" accept=".json" style="display:none" onchange="importData(this)">
+  </div>
+  `;
+}
+
+function calcStreak(){
+  let streak=0;
+  for(let i=0;i<200;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    const di=dayIdxOf(d);
+    const hasActivity = wlog.some(x=>x.date===ds) || (nlog[ds]&&(nlog[ds].m1||nlog[ds].m2)) || plog.some(p=>p.date===ds&&p.weight);
+    if(di===6){ if(hasActivity||i===0) {streak = hasActivity? streak+1 : streak; continue;} else continue; }
+    if(hasActivity) streak++;
+    else { if(i===0) continue; break; }
+  }
+  return streak;
+}
+
+function weightChart(weights){
+  const w=370,h=170,pl=34,pr=10,pt=12,pb=22;
+  const startT=START.getTime(), endT=TRIP.getTime();
+  const x = t => pl + (w-pl-pr)*Math.min(Math.max((t-startT)/(endT-startT),0),1);
+  const yMin=74, yMax=88;
+  const y = v => pt + (h-pt-pb)*(1-(v-yMin)/(yMax-yMin));
+  const targetLine = `M${x(startT)} ${y(WEIGHT_START)} L${x(endT)} ${y(WEIGHT_GOAL)}`;
+  let actual='';
+  if(weights.length){
+    actual = weights.map((p,i)=>(i?'L':'M')+x(new Date(p.date+'T00:00:00').getTime()).toFixed(1)+' '+y(p.weight).toFixed(1)).join(' ');
+  }
+  const dots = weights.slice(-1).map(p=>`<circle cx="${x(new Date(p.date+'T00:00:00').getTime()).toFixed(1)}" cy="${y(p.weight).toFixed(1)}" r="4" fill="var(--gold)"/>`).join('');
+  const grid = [76,80,84,88].map(v=>`<line x1="${pl}" x2="${w-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="4" y="${y(v)+4}" fill="var(--text3)" font-size="10" font-family="JetBrains Mono">${v}</text>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%">
+    ${grid}
+    <path d="${targetLine}" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
+    ${actual?`<path d="${actual}" stroke="var(--gold)" stroke-width="2.5" fill="none" stroke-linecap="round"/>`:''}
+    ${dots}
+    <text x="${w-pr}" y="${h-6}" text-anchor="end" fill="var(--text3)" font-size="10" font-family="JetBrains Mono">27. OKT</text>
+    <text x="${pl}" y="${h-6}" fill="var(--text3)" font-size="10" font-family="JetBrains Mono">13. JUL</text>
+  </svg>
+  <div class="tiny" style="margin-top:4px">Stiplet linje = planlagt kurve. Ligg på eller under den — men trend teller, ikke enkeltdager.</div>`;
+}
+
+function exportData(){
+  const data = { settings, wlog, nlog, plog, supps, photos, exported: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'solfit-atlas-backup-'+todayStr()+'.json';
+  a.click();
+}
+function importData(input){
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const d = JSON.parse(r.result);
+      if(d.settings) settings=d.settings;
+      if(d.wlog) wlog=d.wlog; if(d.nlog) nlog=d.nlog;
+      if(d.plog) plog=d.plog; if(d.supps) supps=d.supps; if(d.photos) photos=d.photos;
+      saveAll(); toast('Data importert ✓'); render();
+    }catch{ toast('Ugyldig fil'); }
+  };
+  r.readAsText(f);
+}
+
+// ------------------------------------------------------------
+// INNSTILLINGER
+// ------------------------------------------------------------
+function pageSettings(){
+  return `
+  <button class="btn ghost sm" onclick="gotoPage('home')">← Tilbake</button>
+  <h1 style="margin-top:12px">Innstillinger</h1>
+  <div class="card" style="margin-top:12px">
+    <label>Navn</label>
+    <input id="sName" value="${esc(settings.name)}">
+    <label>Benchmarkrute (fast testtur)</label>
+    <input id="sRoute" value="${esc(settings.benchmarkRoute)}" placeholder="F.eks. Ølen → lokal topp t/r">
+    <label>Withings Worker-URL</label>
+    <input id="sWorker" value="${esc(settings.workerUrl)}" placeholder="https://solfit-withings.dinkonto.workers.dev">
+    <div class="tiny" style="margin-top:6px">Når denne er satt henter appen siste vekt automatisk fra Withings hver gang du åpner den. Se README for oppsett av Workeren.</div>
+  </div>
+  <button class="btn" onclick="saveSettings()">Lagre</button>
+  <div class="card card2" style="margin-top:14px">
+    <div style="font-weight:700;margin-bottom:4px">Om programmet</div>
+    <div class="tiny" style="line-height:1.7">
+      SolFit Atlas · 13. juli → 27. oktober 2026<br>
+      15 uker · Base → Bygg → Peak → Taper<br>
+      Mål: 86 → 76 kg · Atlas-klar kondis · media-klar overkropp<br>
+      Diet breaks uke 7 og 12 · Benchmarks uke 3, 7, 11, 14
+    </div>
+  </div>
+  `;
+}
+function saveSettings(){
+  settings.name = document.getElementById('sName').value || 'Leif';
+  settings.benchmarkRoute = document.getElementById('sRoute').value;
+  settings.workerUrl = document.getElementById('sWorker').value.trim();
+  saveAll(); toast('Lagret'); gotoPage('home'); syncWithings();
+}
+
+// ============================================================
+render();
+syncWithings();
+</script>
+</body>
+</html>
