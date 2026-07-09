@@ -95,9 +95,9 @@ label{display:block;font-size:12px;color:var(--text2);text-transform:uppercase;l
 </nav>
 <script>
 // ============================================================
-// PROGRAM: SolFit Atlas — 13. juli → 27. oktober 2026
+// PROGRAM: SolFit Atlas — 10. juli → 27. oktober 2026
 // ============================================================
-const START = new Date('2026-07-13T00:00:00');
+const START = new Date('2026-07-10T00:00:00');
 const TRIP  = new Date('2026-10-27T00:00:00');
 const TOTAL_WEEKS = 15;
 const DIET_BREAK_WEEKS = [7,12];
@@ -200,25 +200,25 @@ const MEALS = [
     {name:'Kylling, ris & brokkoli', emoji:'🍗', kcal:1150, protein:92, carbs:80, fat:32,
      ing:['350 g kyllingfilet','90 g jasminris (tørrvekt)','15 g smør','300 g brokkoli','Salt, pepper, paprikakrydder'],
      steps:['Kok risen. Stek kyllingen i smør.','Damp brokkolien. Salt godt.','Alt på én tallerken. Ferdig på 20 min.']},
-    {name:'Skyr-bolle + egg', emoji:'🥣', kcal:1150, protein:86, carbs:52, fat:56,
-     ing:['500 g skyr naturell','150 g økologiske blåbær','30 g valnøtter','1 ss honning','3 egg (kokt eller stekt i smør)'],
-     steps:['Skyr i bolle, blåbær, valnøtter og honning på topp.','Eggene ved siden av. 5 minutter totalt.']}
+    {name:'Yoghurt-bolle + egg', emoji:'🥣', kcal:1150, protein:82, carbs:54, fat:60,
+     ing:['500 g gresk yoghurt naturell 2 %','150 g økologiske blåbær','30 g valnøtter','1 ss honning','3 egg (kokt eller stekt i smør)'],
+     steps:['Yoghurt i bolle, blåbær, valnøtter og honning på topp.','Eggene ved siden av. 5 minutter totalt.']}
   ],
   [ // Tirsdag
     {name:'Karbonader & poteter', emoji:'🥩', kcal:1150, protein:90, carbs:78, fat:40,
      ing:['400 g karbonadedeig','1 egg (bindemiddel)','450 g kokte poteter','Gulrot og erter','10 g smør, salt, pepper'],
      steps:['Bland deig, egg og krydder. Form karbonader.','Stek i smør 3–4 min per side.','Kok poteter og grønnsaker.']},
-    {name:'Bacon-omelett & skyr', emoji:'🍳', kcal:1150, protein:78, carbs:18, fat:74,
-     ing:['4 egg','80 g nitrittfri bacon','50 g revet ost','½ avokado','200 g skyr til slutt'],
-     steps:['Stek bacon, hell over eggene, ost på topp.','Avokado ved siden. Skyr som dessert.']}
+    {name:'Bacon-omelett & yoghurt', emoji:'🍳', kcal:1150, protein:74, carbs:20, fat:76,
+     ing:['4 egg','80 g nitrittfri bacon','50 g revet ost','½ avokado','200 g gresk yoghurt 2 % til slutt'],
+     steps:['Stek bacon, hell over eggene, ost på topp.','Avokado ved siden. Yoghurt som dessert.']}
   ],
   [ // Onsdag
     {name:'Laks & poteter', emoji:'🐟', kcal:1150, protein:70, carbs:70, fat:56,
      ing:['300 g laksefilet','450 g poteter','15 g smør','Asparges eller grønne bønner','Sitron, salt'],
      steps:['Laks i ovn 200 °C i 15–18 min.','Kok poteter, smørdamp grønnsakene.']},
-    {name:'Skyr-bolle + egg', emoji:'🥣', kcal:1150, protein:85, carbs:52, fat:52,
-     ing:['600 g skyr naturell','3 egg (kokt eller stekt i smør)','150 g økologiske blåbær','30 g valnøtter','1 ss honning'],
-     steps:['Skyr-bolle som vanlig, eggene ved siden.','Egg = enkleste fettkilden i kuttet — 3–4 egg hver dag gjennom uka.']}
+    {name:'Yoghurt-bolle + egg', emoji:'🥣', kcal:1150, protein:80, carbs:54, fat:58,
+     ing:['600 g gresk yoghurt naturell 2 %','3 egg (kokt eller stekt i smør)','150 g økologiske blåbær','30 g valnøtter','1 ss honning'],
+     steps:['Yoghurt-bolle som vanlig, eggene ved siden.','Egg = enkleste fettkilden i kuttet — 3–4 egg hver dag gjennom uka.']}
   ],
   [ // Torsdag
     {name:'Kylling, ris & brokkoli', emoji:'🍗', kcal:1150, protein:92, carbs:80, fat:32,
@@ -229,11 +229,11 @@ const MEALS = [
      steps:['Kok/stek eggene.','Cottage cheese med tomat, olivenolje og salt.']}
   ],
   [ // Fredag
-    {name:'Elgburgere', emoji:'🍔', kcal:1150, protein:76, carbs:66, fat:52,
-     ing:['300 g elg- eller storfekjøttdeig','2 fullkornsbun','1 egg','Salat, tomat, rødløk','2 ss rømme'],
-     steps:['Bland deig og egg, form 2 burgere.','Stek 4–5 min per side i tørr panne.','Bygg burgerne. Fredagsfølelse uten dritt.']},
-    {name:'Skyr-bolle + egg', emoji:'🥣', kcal:1150, protein:86, carbs:52, fat:56,
-     ing:['500 g skyr naturell','150 g økologiske blåbær','30 g valnøtter','1 ss honning','3 egg'],
+    {name:'Storfeburgere & potetbåter', emoji:'🍔', kcal:1150, protein:78, carbs:68, fat:48,
+     ing:['400 g storfekjøttdeig (10–14 %)','1 egg (bindemiddel)','400 g poteter i båter','15 g smør eller ghee til båtene','Salat, tomat, rødløk','2 ss rømme + salt/pepper/paprika'],
+     steps:['Potetbåter: vend i smeltet smør/ghee og salt, ovn 200 °C i ~35 min.','Bland deig og egg, form 2 burgere. Stek 4–5 min per side.','Burgertallerken: burgere på salatseng, båter og rømme ved siden. Fredagsfølelse uten dritt.','Vil du ha brød? Ekte surdeigsbrød fra baker funker — sjekk at lista kun er mel, vann og salt (vanlige burgerbrød har nesten alltid frøoljer).']},
+    {name:'Yoghurt-bolle + egg', emoji:'🥣', kcal:1150, protein:82, carbs:54, fat:60,
+     ing:['500 g gresk yoghurt naturell 2 %','150 g økologiske blåbær','30 g valnøtter','1 ss honning','3 egg'],
      steps:['Samme som mandag kveld.']}
   ],
   [ // Lørdag — turdag 2600
@@ -248,10 +248,27 @@ const MEALS = [
     {name:'Ørret & grønnsaker', emoji:'🐟', kcal:1050, protein:68, carbs:58, fat:52,
      ing:['300 g ørret- eller laksefilet','350 g poteter','Smørdampede grønnsaker','Sitron'],
      steps:['Fisk i ovn, poteter i kjele, grønnsaker i smør.']},
-    {name:'Omelett & skyr', emoji:'🍳', kcal:1050, protein:82, carbs:34, fat:54,
-     ing:['3 egg','30 g ost','400 g skyr','100 g økologiske blåbær'],
-     steps:['Omelett i smør.','Skyr med blåbær etterpå. Lett dag — i morgen starter ny uke.']}
+    {name:'Omelett & yoghurt', emoji:'🍳', kcal:1050, protein:76, carbs:36, fat:58,
+     ing:['3 egg','30 g ost','400 g gresk yoghurt 2 %','100 g økologiske blåbær'],
+     steps:['Omelett i smør.','Yoghurt med blåbær etterpå. Lett dag — i morgen starter ny uke.']}
   ]
+];
+
+// Ukeshandel — alt du trenger for én uke av planen
+const SHOPPING = [
+  {cat:'Kjøtt & fisk', emoji:'🥩', items:[
+    '700 g kyllingfilet','400 g karbonadedeig','700 g storfekjøttdeig (10–14 %)',
+    '300 g laksefilet','300 g ørret- eller laksefilet','1 pk nitrittfri bacon (80 g)']},
+  {cat:'Meieri & egg', emoji:'🥚', items:[
+    '25 egg (2 kartonger)','2,2 kg gresk yoghurt naturell 2 % (4–5 beger)','400 g cottage cheese',
+    '1 pose revet ost','1 liten boks rømme','1 pk smør (evt. ghee)']},
+  {cat:'Frukt & grønt', emoji:'🥦', items:[
+    '700 g økologiske blåbær (frosne funker)','2 stk brokkoli (600 g)','2 kg poteter',
+    'Salat, 2 tomater, 1 rødløk','1 boks cherrytomater','1 avokado',
+    'Asparges eller grønne bønner','Gulrøtter og erter','1 løk + hvitløk','1 sitron','1 banan']},
+  {cat:'Tørrvarer & annet', emoji:'🌾', items:[
+    '300 g jasminris','100 g havregryn','150 g valnøtter + 50 g turnøtter','1 glass honning',
+    '1 boks hermetiske tomater','Krydder: paprika, oregano, salt, pepper']}
 ];
 
 const SUPPS = [
@@ -263,7 +280,7 @@ const SUPPS = [
 // ============================================================
 // STATE + STORAGE
 // ============================================================
-let S = { page:'home', sub:null, viewWeek:null, activeWO:null, foodDay:null };
+let S = { page:'home', sub:null, viewWeek:null, activeWO:null, foodDay:null, dayOffset:0 };
 
 function load(k,d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch{ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
@@ -274,8 +291,9 @@ let nlog       = load('sfa_nlog', {});   // { 'YYYY-MM-DD': {m1:bool, m2:bool} }
 let plog       = load('sfa_plog', []);   // [{date, weight?, sleep?, source?}]
 let supps      = load('sfa_supps', {});  // { date: {morgen,middag,kveld} }
 let photos     = load('sfa_photos', {}); // { week: true }
+let shop       = load('sfa_shop', {});   // { 'w<uke>': { 'cat-idx': true } }
 
-const saveAll = () => { save('sfa_settings',settings); save('sfa_wlog',wlog); save('sfa_nlog',nlog); save('sfa_plog',plog); save('sfa_supps',supps); save('sfa_photos',photos); };
+const saveAll = () => { save('sfa_settings',settings); save('sfa_wlog',wlog); save('sfa_nlog',nlog); save('sfa_plog',plog); save('sfa_supps',supps); save('sfa_photos',photos); save('sfa_shop',shop); };
 
 // ============================================================
 // HELPERS
@@ -291,6 +309,28 @@ function currentWeek(){
   return Math.min(Math.floor(diff/7)+1, TOTAL_WEEKS+1);
 }
 function daysToTrip(){ return Math.max(0, Math.ceil((TRIP.getTime() - new Date().setHours(0,0,0,0)) / 864e5)); }
+function dateWithOffset(n){ const d=new Date(); d.setDate(d.getDate()+n); return d; }
+function dateStrOf(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function weekOfDate(d){
+  const diff = Math.floor((new Date(d).setHours(0,0,0,0) - START.getTime()) / 864e5);
+  if (diff < 0) return 0;
+  return Math.min(Math.floor(diff/7)+1, TOTAL_WEEKS+1);
+}
+function dayLabel(off){ return off===0?'I dag':off===-1?'I går':off===1?'I morgen':null; }
+function dayComplete(ds, di){
+  const n = nlog[ds]||{};
+  const mealsDone = !!(n.m1 && n.m2);
+  const trainingDone = WEEK_TEMPLATE[di].type==='rest' ? true : wlog.some(x=>x.date===ds);
+  return mealsDone && trainingDone;
+}
+function completeCount(){
+  let c=0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  for(let d=new Date(START); d<=today; d.setDate(d.getDate()+1)){
+    if(dayComplete(dateStrOf(d), dayIdxOf(d))) c++;
+  }
+  return c;
+}
 function phaseOf(w){ return PHASES.find(p => w>=p.weeks[0] && w<=p.weeks[1]) || (w<1 ? PHASES[0] : PHASES[3]); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -402,13 +442,13 @@ function useStrava(i, mode){
 // ============================================================
 function render(){
   const el = document.getElementById('app');
-  const pages = { home:pageHome, training:pageTraining, fjell:pageFjell, food:pageFood, progress:pageProgress, settings:pageSettings,
+  const pages = { home:pageHome, training:pageTraining, fjell:pageFjell, food:pageFood, shopping:pageShopping, progress:pageProgress, settings:pageSettings,
                   gymDetail:pageGymDetail, activeWO:pageActiveWO, cardioLog:pageCardioLog, hikeLog:pageHikeLog };
   el.innerHTML = (pages[S.page]||pageHome)();
   el.className = 'fade';
   ['home','training','fjell','food','progress'].forEach(p=>{
     const b=document.getElementById('nav-'+p);
-    if(b) b.classList.toggle('active', S.page===p || (S.page.startsWith('gym')&&p==='training') || (['activeWO','cardioLog'].includes(S.page)&&p==='training') || (S.page==='hikeLog'&&p==='fjell'));
+    if(b) b.classList.toggle('active', S.page===p || (S.page.startsWith('gym')&&p==='training') || (['activeWO','cardioLog'].includes(S.page)&&p==='training') || (S.page==='hikeLog'&&p==='fjell') || (S.page==='shopping'&&p==='food'));
   });
   window.scrollTo(0,0);
 }
@@ -461,20 +501,28 @@ function ridgeSVG(){
 // HJEM
 // ------------------------------------------------------------
 function pageHome(){
-  const cw = currentWeek();
-  const di = dayIdxOf(new Date());
+  const off = S.dayOffset;
+  const vd = dateWithOffset(off);
+  const ds = dateStrOf(vd);
+  const di = dayIdxOf(vd);
+  const cw = weekOfDate(vd);
+  const cwToday = currentWeek();
   const ph = phaseOf(cw);
   const sess = WEEK_TEMPLATE[di];
-  const t = todayStr();
   const meals = MEALS[di];
-  const nToday = nlog[t] || {};
-  const sToday = supps[t] || {};
-  const pToday = plog.find(p=>p.date===t) || {};
+  const nDay = nlog[ds] || {};
+  const sDay = supps[ds] || {};
+  const pDay = plog.find(p=>p.date===ds) || {};
   const lw = latestWeight();
   const kcal = kcalTarget(Math.max(cw,1), di);
-  const preStart = cw===0;
+  const eaten = (nDay.m1? meals[0].kcal:0) + (nDay.m2? meals[1].kcal:0);
+  const preStart = cwToday===0;
   const db = DIET_BREAK_WEEKS.includes(cw);
   const fyll = cw===15 && di>=3;
+  const complete = dayComplete(ds, di);
+  const lbl = dayLabel(off);
+  const trainingDone = sess.type==='rest' ? true : wlog.some(x=>x.date===ds);
+  const steps = (nDay.m1?1:0)+(nDay.m2?1:0)+(trainingDone?1:0);
 
   return `
   <div class="spread" style="margin-bottom:10px">
@@ -490,38 +538,62 @@ function pageHome(){
   <div class="card" style="padding:14px 14px 8px">
     <div class="spread" style="margin-bottom:6px">
       <div><span class="mono" style="font-size:30px;font-weight:700;color:var(--gold)">${daysToTrip()}</span> <span class="muted">dager til Atlas</span></div>
-      <span class="badge gold">${preStart?'Pre-start':'Uke '+cw+' · '+ph.name}</span>
+      <span class="badge gold">${preStart?'Pre-start':'Uke '+cwToday+' \u00b7 '+phaseOf(cwToday).name}</span>
     </div>
     ${ridgeSVG()}
-    ${db? '<div class="tiny" style="color:var(--green);margin-top:4px">🟢 DIET BREAK-UKE — spis på vedlikehold (2900 kcal), tren som normalt</div>':''}
-    ${fyll? '<div class="tiny" style="color:var(--gold);margin-top:4px">⚡ FYLLMODUS — karb opp, glykogen inn. Full på kamera fra dag én.</div>':''}
-    ${preStart? '<div class="tiny" style="margin-top:4px">Programstart mandag 13. juli — bruk dagene til handling og en rolig testtur.</div>':''}
+    ${db? '<div class="tiny" style="color:var(--green);margin-top:4px">\ud83d\udfe2 DIET BREAK-UKE \u2014 spis p\u00e5 vedlikehold (2900 kcal), tren som normalt</div>':''}
+    ${fyll? '<div class="tiny" style="color:var(--gold);margin-top:4px">\u26a1 FYLLMODUS \u2014 karb opp, glykogen inn. Full p\u00e5 kamera fra dag \u00e9n.</div>':''}
+    ${preStart? '<div class="tiny" style="margin-top:4px">Programstart FREDAG 10. JULI \u2014 i morgen braker det l\u00f8s. Handle inn i dag!</div>':''}
   </div>
 
-  <h2>Dagens økt — ${DAYS[di]}</h2>
-  ${sessionHero(cw||1, di, sess)}
+  <div class="spread" style="margin:16px 0 2px">
+    <button class="btn dim sm" style="min-width:44px" aria-label="Forrige dag" onclick="S.dayOffset=Math.max(S.dayOffset-1,-14);render()">\u2039</button>
+    <div style="text-align:center">
+      <div style="font-weight:800;font-size:17px;text-transform:uppercase;font-style:italic">${lbl? lbl : DAYS[di]}</div>
+      <div class="tiny mono">${DAYS[di]} ${ds.slice(8,10)}.${ds.slice(5,7)} \u00b7 uke ${Math.max(cw,1)} \u00b7 ${steps}/3 fullf\u00f8rt</div>
+    </div>
+    <button class="btn dim sm" style="min-width:44px" aria-label="Neste dag" onclick="S.dayOffset=Math.min(S.dayOffset+1,14);render()">\u203a</button>
+  </div>
+  ${off!==0? `<div class="tiny" style="text-align:center;margin-bottom:6px"><span style="color:var(--sky);cursor:pointer" onclick="S.dayOffset=0;render()">\u21a9 Tilbake til i dag</span></div>`:''}
 
-  <h2>Dagens mat · ${kcal} kcal</h2>
+  ${complete? `<div class="card" style="border-color:var(--gold2);background:linear-gradient(135deg,#2a230e,#1A1712)">
+    <div class="row">
+      <div style="font-size:28px">\ud83c\udfd4</div>
+      <div style="flex:1">
+        <div style="font-weight:800;text-transform:uppercase;font-style:italic;color:var(--gold)">Dag komplett!</div>
+        <div class="tiny">Basecamp flyttet frem \u2014 ${completeCount()} komplette dager totalt. Hver eneste er h\u00f8ydemeter mot Toubkal.</div>
+      </div>
+    </div>
+    ${off===0? `<button class="btn" style="margin-top:10px" onclick="S.dayOffset=1;render()">Se morgendagen \u2192</button>`:''}
+  </div>`:''}
+
+  <h2>${off===0?'Dagens':'Dagens'} \u00f8kt</h2>
+  ${sessionHero(cw||1, di, sess, off===0, ds)}
+
+  <h2>Mat \u00b7 <span class="mono" style="color:${eaten>=kcal?'var(--green)':'var(--gold)'}">${eaten}</span> / ${kcal} kcal</h2>
+  <div style="background:var(--card2);border-radius:99px;height:6px;margin:-2px 0 10px;overflow:hidden">
+    <div style="background:${eaten>=kcal?'var(--green)':'var(--gold)'};height:100%;width:${Math.min(100,Math.round(eaten/kcal*100))}%"></div>
+  </div>
   ${meals.map((m,i)=>{
-    const done = nToday['m'+(i+1)];
+    const done = nDay['m'+(i+1)];
     return `<div class="card" style="padding:13px 14px">
       <div class="row">
         <div style="font-size:24px">${m.emoji}</div>
         <div style="flex:1" onclick="S.foodDay=${di};gotoPage('food')">
-          <div style="font-weight:700">${i===0?'Måltid 1':'Måltid 2'} · ${esc(m.name)}</div>
-          <div class="tiny mono">${m.kcal} kcal · ${m.protein}g protein</div>
+          <div style="font-weight:700">${i===0?'M\u00e5ltid 1':'M\u00e5ltid 2'} \u00b7 ${esc(m.name)}</div>
+          <div class="tiny mono">${m.kcal} kcal \u00b7 ${m.protein}g protein</div>
         </div>
-        <div class="check ${done?'on':''}" role="button" aria-label="Marker måltid" onclick="toggleMeal('${t}',${i+1})">✓</div>
+        <div class="check ${done?'on':''}" role="button" aria-label="Marker m\u00e5ltid" onclick="toggleMeal('${ds}',${i+1})">\u2713</div>
       </div>
     </div>`;
   }).join('')}
 
-  <h2>Hurtiglogg</h2>
+  ${off===0? `<h2>Hurtiglogg</h2>
   <div class="card">
     <div class="spread">
       <div>
         <div style="font-weight:700">Vekt i dag</div>
-        <div class="tiny">${pToday.weight? '<span class="mono" style="color:var(--gold)">'+pToday.weight+' kg</span>'+(pToday.source==='withings'?' · fra Withings':'') : (settings.workerUrl?'Venter på Withings…':'Ikke logget')}</div>
+        <div class="tiny">${pDay.weight? '<span class="mono" style="color:var(--gold)">'+pDay.weight+' kg</span>'+(pDay.source==='withings'?' \u00b7 fra Withings':'') : (settings.workerUrl?'Venter p\u00e5 Withings\u2026':'Ikke logget')}</div>
       </div>
       <div class="row" style="gap:8px">
         <input type="number" step="0.1" inputmode="decimal" id="wIn" placeholder="${lw?lw.weight:WEIGHT_START}" style="width:86px;text-align:center">
@@ -530,17 +602,17 @@ function pageHome(){
     </div>
     <div style="border-top:1px solid var(--line);margin:12px 0"></div>
     <div class="spread">
-      <div style="font-weight:700">Søvn i natt</div>
+      <div style="font-weight:700">S\u00f8vn i natt</div>
       <div class="row" style="gap:6px">
-        ${[1,2,3,4,5].map(n=>`<button class="week-pill ${pToday.sleep===n?'sel':''}" style="min-width:34px" onclick="logSleep(${n})">${n}</button>`).join('')}
+        ${[1,2,3,4,5].map(n=>`<button class="week-pill ${pDay.sleep===n?'sel':''}" style="min-width:34px" onclick="logSleep(${n})">${n}</button>`).join('')}
       </div>
     </div>
-  </div>
+  </div>`:''}
 
   <h2>Supplements</h2>
   <div class="card" style="padding:6px 14px">
     ${SUPPS.map(g=>`<div class="list-item">
-      <div class="check green ${sToday[g.key]?'on':''}" role="button" onclick="toggleSupp('${t}','${g.key}')">✓</div>
+      <div class="check green ${sDay[g.key]?'on':''}" role="button" onclick="toggleSupp('${ds}','${g.key}')">\u2713</div>
       <div style="flex:1">
         <div style="font-weight:600;font-size:14px">${g.name}</div>
         <div class="tiny">${g.items}</div>
@@ -550,18 +622,19 @@ function pageHome(){
 
   ${di===6? `<div class="card card2" style="border-color:var(--gold2)">
     <div class="row">
-      <div style="font-size:22px">📸</div>
+      <div style="font-size:22px">\ud83d\udcf8</div>
       <div style="flex:1">
-        <div style="font-weight:700">Søndag = progressbilde</div>
+        <div style="font-weight:700">S\u00f8ndag = progressbilde</div>
         <div class="tiny">Samme lys, samme vinkel. Uke ${Math.max(cw,1)} av 15.</div>
       </div>
-      <div class="check ${photos[Math.max(cw,1)]?'on':''}" role="button" onclick="togglePhoto(${Math.max(cw,1)})">✓</div>
+      <div class="check ${photos[Math.max(cw,1)]?'on':''}" role="button" onclick="togglePhoto(${Math.max(cw,1)})">\u2713</div>
     </div>
   </div>`:''}
   `;
 }
 
-function sessionHero(week, dayIdx, sess){
+function sessionHero(week, dayIdx, sess, actionable, ds){
+  if(actionable===undefined) actionable=true;
   const ph = phaseOf(week);
   let cls='gym', body='', action='';
   if(sess.type==='gym'){
@@ -598,7 +671,9 @@ function sessionHero(week, dayIdx, sess){
             <div class="muted" style="margin:4px 0 2px">Restitusjon er der fremgangen skjer.</div>
             <div class="tiny">${week===13?'Toppuke: valgfri rolig 1,5 t gåtur i dag (back-to-back-trening for Atlas).':'Rolig gåtur er lov. Trening er ikke.'}</div>`;
   }
-  return `<div class="session-hero ${cls}">${body}${action}</div>`;
+  if(!actionable) action = '';
+  const logged = ds && sess.type!=='rest' && wlog.some(x=>x.date===ds);
+  return `<div class="session-hero ${cls}">${body}${logged?'<div class="tiny" style="color:var(--green);margin-top:8px">✓ Økt logget denne dagen</div>':''}${action}</div>`;
 }
 
 // ------------------------------------------------------------
@@ -655,7 +730,7 @@ function pageTraining(){
             x.type==='gym'? (x.data.exercises||[]).length+' øvelser' :
             (x.data.min||0)+' min';
     return `<div class="card" style="padding:11px 14px"><div class="spread"><div style="font-weight:600">${n}</div><div class="tiny mono">${x.date} · ${d}</div></div></div>`;
-  }).join('') || '<div class="muted">Ingen økter logget ennå. Første økt starter mandag 13. juli.</div>'}
+  }).join('') || '<div class="muted">Ingen økter logget ennå. Første økt starter fredag 10. juli.</div>'}
   `;
 }
 
@@ -943,8 +1018,16 @@ function pageFood(){
   const nToday = nlog[t]||{};
   const kcal = kcalTarget(cw, di);
   const db = DIET_BREAK_WEEKS.includes(cw);
+  const nT = nlog[todayStr()]||{};
+  const mealsToday = MEALS[todayIdx];
+  const eatenToday = (nT.m1? mealsToday[0].kcal:0) + (nT.m2? mealsToday[1].kcal:0);
+  const kcalToday = kcalTarget(cw, todayIdx);
   return `
-  <h1>Mat</h1>
+  <div class="spread">
+    <h1>Mat</h1>
+    <button class="btn ghost sm" onclick="gotoPage('shopping')">🛒 Ukeshandel</button>
+  </div>
+  <div class="tiny mono" style="margin-top:2px">I dag: <span style="color:${eatenToday>=kcalToday?'var(--green)':'var(--gold)'}">${eatenToday}</span> / ${kcalToday} kcal</div>
   <div class="hscroll" style="margin:12px 0">
     ${DAYS.map((d,i)=>`<div class="week-pill ${i===di?'sel':(i===todayIdx?'cur':'')}" style="min-width:52px" onclick="S.foodDay=${i};render()">${d.slice(0,3)}</div>`).join('')}
   </div>
@@ -1024,6 +1107,52 @@ function logSleep(n){
   const t = todayStr();
   const e = plog.find(p=>p.date===t);
   if(e) e.sleep=n; else plog.push({date:t, sleep:n});
+  saveAll(); render();
+}
+
+
+// ------------------------------------------------------------
+// HANDLELISTE
+// ------------------------------------------------------------
+function pageShopping(){
+  const w = Math.max(currentWeek(),1);
+  const key = 'w'+w;
+  const done = shop[key]||{};
+  const total = SHOPPING.reduce((s,c)=>s+c.items.length,0);
+  const checked = Object.values(done).filter(Boolean).length;
+  return `
+  <button class="btn ghost sm" onclick="gotoPage('food')">\u2190 Tilbake</button>
+  <div class="spread" style="margin-top:12px">
+    <h1>Ukeshandel</h1>
+    <span class="badge gold mono">${checked}/${total}</span>
+  </div>
+  <div class="muted" style="margin:4px 0 10px">Alt for uke ${w} av planen. Huk av mens du handler \u2014 lista nullstilles ved ny uke.</div>
+  <div style="background:var(--card2);border-radius:99px;height:6px;margin-bottom:14px;overflow:hidden">
+    <div style="background:var(--gold);height:100%;width:${total?Math.round(checked/total*100):0}%"></div>
+  </div>
+  ${SHOPPING.map((c,ci)=>`<h2>${c.emoji} ${c.cat}</h2>
+    <div class="card" style="padding:6px 14px">
+      ${c.items.map((it,ii)=>{
+        const k = ci+'-'+ii;
+        return `<div class="list-item" style="padding:9px 0">
+          <div class="check green ${done[k]?'on':''}" role="button" onclick="toggleShop('${key}','${k}')">\u2713</div>
+          <div style="flex:1;font-size:14.5px;${done[k]?'text-decoration:line-through;color:var(--text3)':''}">${esc(it)}</div>
+        </div>`;
+      }).join('')}
+    </div>`).join('')}
+  <div class="card card2">
+    <div class="tiny" style="line-height:1.7">
+      \u00b7 Diet break-uker (7 og 12): legg til ekstra ris/poteter<br>
+      \u00b7 Sjekk alltid ingredienslista: ingen frøoljer, maltodekstrin eller sitronsyre<br>
+      \u00b7 Muraglia EVOO, honning og krydder holder flere uker \u2014 kj\u00f8p ved behov
+    </div>
+  </div>
+  <button class="btn dim" onclick="if(confirm('Nullstille lista for denne uka?')){delete shop['${key}'];saveAll();render()}">Nullstill lista</button>
+  `;
+}
+function toggleShop(wk, k){
+  shop[wk] = shop[wk]||{};
+  shop[wk][k] = !shop[wk][k];
   saveAll(); render();
 }
 
@@ -1126,7 +1255,7 @@ function weightChart(weights){
     ${actual?`<path d="${actual}" stroke="var(--gold)" stroke-width="2.5" fill="none" stroke-linecap="round"/>`:''}
     ${dots}
     <text x="${w-pr}" y="${h-6}" text-anchor="end" fill="var(--text3)" font-size="10" font-family="JetBrains Mono">27. OKT</text>
-    <text x="${pl}" y="${h-6}" fill="var(--text3)" font-size="10" font-family="JetBrains Mono">13. JUL</text>
+    <text x="${pl}" y="${h-6}" fill="var(--text3)" font-size="10" font-family="JetBrains Mono">10. JUL</text>
   </svg>
   <div class="tiny" style="margin-top:4px">Stiplet linje = planlagt kurve. Ligg på eller under den — men trend teller, ikke enkeltdager.</div>`;
 }
@@ -1174,7 +1303,7 @@ function pageSettings(){
   <div class="card card2" style="margin-top:14px">
     <div style="font-weight:700;margin-bottom:4px">Om programmet</div>
     <div class="tiny" style="line-height:1.7">
-      SolFit Atlas · 13. juli → 27. oktober 2026<br>
+      SolFit Atlas · 10. juli → 27. oktober 2026<br>
       15 uker · Base → Bygg → Peak → Taper<br>
       Mål: 86 → 76 kg · Atlas-klar kondis · media-klar overkropp<br>
       Diet breaks uke 7 og 12 · Benchmarks uke 3, 7, 11, 14
