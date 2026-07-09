@@ -25,9 +25,22 @@ Hver push til `main` deployer automatisk.
 2. Deploy `withings-worker.js` som Worker. Bind et KV namespace som `KV`.
 3. Secrets: `WITHINGS_CLIENT_ID` og `WITHINGS_CLIENT_SECRET`.
 4. Besøk `https://<worker>/auth` én gang og logg inn.
-5. Lim Worker-URL inn i appen: Innstillinger → Withings Worker-URL.
+5. Lim Worker-URL inn i appen: Innstillinger → Worker-URL.
 
 Etter dette: stå på vekta → tallet dukker opp i appen automatisk.
+
+## Strava-oppsett (valgfritt, ~10 min)
+
+Samme Worker og samme KV — bare to nye secrets og én godkjenning:
+
+1. Lag API-app på https://www.strava.com/settings/api
+   - Authorization Callback Domain: `<worker>.<konto>.workers.dev` (kun domenet, uten https/sti)
+2. Secrets på Workeren: `STRAVA_CLIENT_ID` og `STRAVA_CLIENT_SECRET`.
+3. Besøk `https://<worker>/strava/auth` én gang og godkjenn.
+
+Etter dette: «Hent fra Strava»-listen dukker opp i loggskjemaene for langtur og kondis,
+og fyller inn tid, distanse, høydemeter og puls automatisk. Fjell-siden viser
+stigningstempo (hm/t), benchmark-utvikling og Toubkal-teller basert på turene.
 
 ## Programmet i korte trekk
 

@@ -85,7 +85,9 @@ label{display:block;font-size:12px;color:var(--text2);text-transform:uppercase;l
   <button class="nav-btn" id="nav-home" onclick="gotoPage('home')">
     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10"/></svg>Hjem</button>
   <button class="nav-btn" id="nav-training" onclick="gotoPage('training')">
-    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 17l5-9 4 6 3-4 4 7H4z"/></svg>Trening</button>
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.5 6.5h11m-11 11h11M4 9V4m0 5h2m-2 0v5m0 0v5m0-5h2m14-5V4m0 5h-2m2 0v5m0 0v5m0-5h-2M9 12h6"/></svg>Trening</button>
+  <button class="nav-btn" id="nav-fjell" onclick="gotoPage('fjell')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 20L9 8l3.5 6L15 10l6 10H3z"/><path stroke-linecap="round" d="M15 10l1.5-3 1.5 3"/></svg>Fjell</button>
   <button class="nav-btn" id="nav-food" onclick="gotoPage('food')">
     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v8a3 3 0 003 3v7M5 3v5M8 3v5M18 3c-2 2-3 4-3 7h3v11"/></svg>Mat</button>
   <button class="nav-btn" id="nav-progress" onclick="gotoPage('progress')">
@@ -332,17 +334,81 @@ async function syncWithings(){
 }
 
 // ============================================================
+// STRAVA (via samme Worker)
+// ============================================================
+let stravaActs = null;     // null = ikke hentet, [] = hentet men tomt, 'error' = feilet
+let stravaSel = null;      // valgt aktivitet for pågående logging
+
+async function syncStrava(force){
+  if(!settings.workerUrl) return;
+  if(stravaActs && !force) return;
+  try{
+    const r = await fetch(settings.workerUrl.replace(/\/$/,'') + '/activities');
+    if(!r.ok){ stravaActs='error'; }
+    else {
+      const d = await r.json();
+      stravaActs = Array.isArray(d)? d : 'error';
+    }
+  }catch{ stravaActs='error'; }
+  if(['fjell','hikeLog','cardioLog'].includes(S.page)) render();
+}
+
+function stravaUsedIds(){
+  return new Set(wlog.map(x=>x.data && x.data.stravaId).filter(Boolean));
+}
+
+function stravaPicker(mode){ // mode: 'hike' | 'cardio'
+  if(!settings.workerUrl) return '<div class="tiny" style="margin-top:8px">Koble til Strava: sett Worker-URL i innstillinger.</div>';
+  if(stravaActs===null){ syncStrava(); return '<div class="tiny" style="margin-top:8px">Henter fra Strava…</div>'; }
+  if(stravaActs==='error') return `<div class="tiny" style="margin-top:8px">Fikk ikke kontakt med Strava. <span style="color:var(--sky);cursor:pointer" onclick="stravaActs=null;syncStrava(true)">Prøv igjen</span> · Første gang? Åpne <span class="mono">worker-url/strava/auth</span></div>`;
+  const hikeTypes = ['Hike','Walk','TrailRun','Run','Snowshoe','BackcountrySki'];
+  const used = stravaUsedIds();
+  let list = stravaActs.filter(a=>!used.has(a.id));
+  if(mode==='hike') list = list.sort((a,b)=> (hikeTypes.includes(b.type)?1:0)-(hikeTypes.includes(a.type)?1:0));
+  list = list.slice(0,5);
+  if(!list.length) return '<div class="tiny" style="margin-top:8px">Ingen nye Strava-økter å hente.</div>';
+  return `<div style="margin-top:10px">
+    <div class="tiny" style="margin-bottom:6px">HENT FRA STRAVA</div>
+    ${list.map(a=>{
+      const i = stravaActs.indexOf(a);
+      return `<div class="list-item" style="padding:8px 0">
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px">${esc(a.name)}</div>
+          <div class="tiny mono">${a.date} · ${a.min} min · ${a.km} km · ${a.hm} hm${a.hr?' · '+a.hr+' bpm':''}</div>
+        </div>
+        <button class="btn sm ghost" onclick="useStrava(${i},'${mode}')">Bruk</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function useStrava(i, mode){
+  const a = stravaActs[i]; if(!a) return;
+  stravaSel = a;
+  if(mode==='hike'){
+    const set=(id,v)=>{const e=document.getElementById(id); if(e) e.value=v;};
+    set('hMin', a.min); set('hKm', a.km); set('hHm', a.hm);
+    const n=document.getElementById('hNote'); if(n && !n.value) n.value = a.name;
+  } else {
+    const set=(id,v)=>{const e=document.getElementById(id); if(e) e.value=v;};
+    set('cMin', a.min); if(a.hr) set('cHr', a.hr);
+    const n=document.getElementById('cNote'); if(n && !n.value) n.value = a.name;
+  }
+  toast('Hentet fra Strava ✓');
+}
+
+// ============================================================
 // RENDER
 // ============================================================
 function render(){
   const el = document.getElementById('app');
-  const pages = { home:pageHome, training:pageTraining, food:pageFood, progress:pageProgress, settings:pageSettings,
+  const pages = { home:pageHome, training:pageTraining, fjell:pageFjell, food:pageFood, progress:pageProgress, settings:pageSettings,
                   gymDetail:pageGymDetail, activeWO:pageActiveWO, cardioLog:pageCardioLog, hikeLog:pageHikeLog };
   el.innerHTML = (pages[S.page]||pageHome)();
   el.className = 'fade';
-  ['home','training','food','progress'].forEach(p=>{
+  ['home','training','fjell','food','progress'].forEach(p=>{
     const b=document.getElementById('nav-'+p);
-    if(b) b.classList.toggle('active', S.page===p || (S.page.startsWith('gym')&&p==='training') || (['activeWO','cardioLog','hikeLog'].includes(S.page)&&p==='training'));
+    if(b) b.classList.toggle('active', S.page===p || (S.page.startsWith('gym')&&p==='training') || (['activeWO','cardioLog'].includes(S.page)&&p==='training') || (S.page==='hikeLog'&&p==='fjell'));
   });
   window.scrollTo(0,0);
 }
@@ -669,6 +735,7 @@ function pageCardioLog(){
     <div style="font-weight:700">${isZ2? c.min+' min · mølle '+c.inc+' stigning' : c.reps}</div>
     <div class="muted" style="margin-top:4px">${c.note}</div>
   </div>
+  <div class="card" style="padding:12px 14px">${stravaPicker('cardio')}</div>
   <div class="card">
     <label>Minutter totalt</label><input type="number" inputmode="numeric" id="cMin" value="${isZ2?c.min:''}">
     <label>${isZ2?'Stigning % / fart':'Antall drag × fart/watt'}</label><input id="cDet" placeholder="${isZ2?'12 % · 5,2 km/t':'4 × 4 min · 300 W'}">
@@ -679,11 +746,13 @@ function pageCardioLog(){
   `;
 }
 function saveCardio(type){
-  wlog.push({date:todayStr(), type, data:{
+  const d = {
     min:+document.getElementById('cMin').value||0,
     detail:document.getElementById('cDet').value,
     hr:+document.getElementById('cHr').value||null,
-    note:document.getElementById('cNote').value }});
+    note:document.getElementById('cNote').value };
+  if(stravaSel){ d.stravaId = stravaSel.id; if(stravaSel.hr && !d.hr) d.hr = stravaSel.hr; stravaSel = null; }
+  wlog.push({date:todayStr(), type, data:d});
   saveAll(); toast('Kondisøkt lagret 🫁'); gotoPage('training');
 }
 
@@ -692,13 +761,14 @@ function pageHikeLog(){
   const hk = HIKES[Math.min(w,TOTAL_WEEKS)];
   const bench = BENCHMARK_WEEKS.includes(w);
   return `
-  <button class="btn ghost sm" onclick="gotoPage('training')">← Tilbake</button>
+  <button class="btn ghost sm" onclick="gotoPage('fjell')">← Tilbake</button>
   <h1 style="margin-top:12px;color:var(--sky)">⛰️ Langtur — uke ${w}</h1>
   <div class="card card2" style="margin-top:10px">
     <div style="font-weight:700">${hk.h} · ${hk.pack} kg sekk · ${hk.elev} hm</div>
     <div class="muted" style="margin-top:4px">${hk.note}</div>
     ${bench? `<div class="tiny" style="color:var(--gold);margin-top:6px">⭐ Benchmark-uke — gå ruta: ${esc(settings.benchmarkRoute||'sett benchmarkrute i innstillinger')}</div>`:''}
   </div>
+  <div class="card" style="padding:12px 14px">${stravaPicker('hike')}</div>
   <div class="card">
     <label>Tid (minutter)</label><input type="number" inputmode="numeric" id="hMin" placeholder="150">
     <label>Distanse (km)</label><input type="number" step="0.1" inputmode="decimal" id="hKm" placeholder="10.5">
@@ -710,14 +780,154 @@ function pageHikeLog(){
   `;
 }
 function saveHike(bench){
-  wlog.push({date:todayStr(), type:'hike', data:{
+  const d = {
     min:+document.getElementById('hMin').value||0,
     km:+document.getElementById('hKm').value||0,
     hm:+document.getElementById('hHm').value||0,
     pack:+document.getElementById('hPack').value||0,
     note:document.getElementById('hNote').value,
-    benchmark:bench, week:Math.max(currentWeek(),1) }});
-  saveAll(); toast('Tur lagret ⛰️'); gotoPage('training');
+    benchmark:bench, week:Math.max(currentWeek(),1) };
+  if(stravaSel){ d.stravaId = stravaSel.id; if(stravaSel.hr) d.hr = stravaSel.hr; stravaSel = null; }
+  wlog.push({date:todayStr(), type:'hike', data:d});
+  saveAll(); toast('Tur lagret ⛰️'); gotoPage('fjell');
+}
+
+// ------------------------------------------------------------
+// FJELL — egen side for turene mot Atlas
+// ------------------------------------------------------------
+const TOUBKAL_HM = 4167; // høyeste punkt i High Atlas — total-hm måles i "Toubkaler"
+
+function hikeCalc(h){
+  const min = h.data.min||0, hm = h.data.hm||0, km = h.data.km||0;
+  return {
+    vspeed: min>0? Math.round(hm/(min/60)) : null,           // høydemeter per time
+    pace:   min>0 && km>0? (min/km) : null                    // min per km
+  };
+}
+function fmtPace(p){ if(p==null) return '–'; const m=Math.floor(p), s=Math.round((p-m)*60); return m+':'+pad(s); }
+function fmtTime(min){ return Math.floor(min/60)+':'+pad(min%60); }
+
+function tempoChart(hikes){
+  const data = hikes.filter(h=>hikeCalc(h).vspeed!=null);
+  if(data.length<2) return '<div class="muted" style="padding:8px 0">Tempo-grafen tegnes når du har logget minst to turer med tid og høydemeter.</div>';
+  const w=370,h=150,pl=30,pr=8,pt=14,pb=20;
+  const vs = data.map(x=>hikeCalc(x).vspeed);
+  const yMax = Math.max(...vs)*1.15, yMin = Math.max(0, Math.min(...vs)*0.8);
+  const bw = Math.min(26, (w-pl-pr)/data.length - 6);
+  const x = i => pl + (w-pl-pr)*(i+0.5)/data.length;
+  const y = v => pt + (h-pt-pb)*(1-(v-yMin)/(yMax-yMin));
+  const bars = data.map((hk,i)=>{
+    const v = hikeCalc(hk).vspeed;
+    const bench = hk.data.benchmark;
+    return `<rect x="${(x(i)-bw/2).toFixed(1)}" y="${y(v).toFixed(1)}" width="${bw}" height="${(h-pb-y(v)).toFixed(1)}" rx="4" fill="${bench?'var(--gold)':'var(--sky)'}" opacity="${bench?1:0.75}"/>`
+      + `<text x="${x(i).toFixed(1)}" y="${(y(v)-4).toFixed(1)}" text-anchor="middle" fill="var(--text2)" font-size="9" font-family="JetBrains Mono">${v}</text>`
+      + `<text x="${x(i).toFixed(1)}" y="${h-6}" text-anchor="middle" fill="var(--text3)" font-size="8" font-family="JetBrains Mono">u${hk.data.week||'?'}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%">
+    <text x="2" y="${pt}" fill="var(--text3)" font-size="9" font-family="Outfit">hm/t</text>
+    ${bars}
+  </svg>
+  <div class="tiny" style="margin-top:2px">Stigningstempo (høydemeter per time). Gull = benchmark. Opp og til høyre = fjellklar.</div>`;
+}
+
+function pageFjell(){
+  const w = Math.max(currentWeek(),1);
+  const hk = HIKES[Math.min(w,TOTAL_WEEKS)];
+  const hikes = wlog.filter(x=>x.type==='hike').sort((a,b)=>a.date<b.date?-1:1);
+  const benches = hikes.filter(h=>h.data.benchmark);
+  const totalHm = hikes.reduce((s,h)=>s+(h.data.hm||0),0);
+  const totalKm = hikes.reduce((s,h)=>s+(h.data.km||0),0);
+  const toubkal = totalHm/TOUBKAL_HM;
+  const maxHm = hikes.reduce((s,h)=>Math.max(s,h.data.hm||0),0);
+  const maxMin = hikes.reduce((s,h)=>Math.max(s,h.data.min||0),0);
+  const maxPack = hikes.reduce((s,h)=>Math.max(s,h.data.pack||0),0);
+  const bench = BENCHMARK_WEEKS.includes(w);
+  let benchDelta = '';
+  if(benches.length>=2){
+    const first=benches[0], last=benches[benches.length-1];
+    const d=(last.data.min||0)-(first.data.min||0);
+    benchDelta = `<div class="tiny" style="color:${d<=0?'var(--green)':'var(--red)'};margin-top:6px">${d<=0?'▼ '+Math.abs(d)+' min raskere':'▲ '+d+' min tregere'} enn benchmark #1</div>`;
+  }
+  return `
+  <h1>Fjell</h1>
+  <div class="muted" style="margin:2px 0 12px">Veien til High Atlas går over Økland.</div>
+
+  <div class="session-hero cardio">
+    <div class="spread">
+      <div style="font-weight:800;font-size:20px;text-transform:uppercase;font-style:italic;color:var(--sky)">⛰️ Uke ${w}${bench?' · <span style="color:var(--gold)">BENCHMARK</span>':''}</div>
+    </div>
+    <div class="row" style="gap:8px;margin:8px 0 4px">
+      <div class="stat"><div class="v">${hk.h}</div><div class="l">Varighet</div></div>
+      <div class="stat"><div class="v">${hk.pack} kg</div><div class="l">Sekk</div></div>
+      <div class="stat"><div class="v">${hk.elev}</div><div class="l">Høydemeter</div></div>
+    </div>
+    <div class="tiny">${hk.note}</div>
+    ${bench? `<div class="tiny" style="color:var(--gold);margin-top:4px">Rute: ${esc(settings.benchmarkRoute||'sett benchmarkrute i innstillinger')}</div>`:''}
+    <button class="btn" style="margin-top:12px;background:var(--sky)" onclick="gotoPage('hikeLog')">Logg turen</button>
+  </div>
+
+  <h2>Atlas-status</h2>
+  <div class="row" style="gap:8px">
+    <div class="stat"><div class="v">${hikes.length}</div><div class="l">turer</div></div>
+    <div class="stat"><div class="v">${totalHm.toLocaleString('no')}</div><div class="l">hm totalt</div></div>
+    <div class="stat"><div class="v">${totalKm.toFixed(0)}</div><div class="l">km totalt</div></div>
+  </div>
+  <div class="card card2" style="margin-top:8px;padding:13px 14px">
+    <div class="spread">
+      <div style="font-weight:700">🏔 Toubkal-teller</div>
+      <div class="mono" style="color:var(--gold);font-weight:700">${toubkal.toFixed(2)} ×</div>
+    </div>
+    <div style="background:var(--card);border-radius:99px;height:8px;margin-top:8px;overflow:hidden">
+      <div style="background:var(--gold);height:100%;width:${Math.min(100,(toubkal%1)*100).toFixed(0)}%"></div>
+    </div>
+    <div class="tiny" style="margin-top:6px">Sum høydemeter målt i Toubkal-topper (4167 m). Hver hele = ett Atlas-massiv i beina.</div>
+  </div>
+
+  <h2>Stigningstempo</h2>
+  <div class="card">${tempoChart(hikes)}</div>
+
+  <h2>Benchmarkruta</h2>
+  <div class="card" style="padding:10px 14px">
+    ${benches.length? benches.map(b=>{
+      const c=hikeCalc(b);
+      return `<div class="list-item">
+        <div style="flex:1">
+          <div style="font-weight:600">Uke ${b.data.week}</div>
+          <div class="tiny">${b.data.hm} hm · ${b.data.pack} kg · ${c.vspeed?c.vspeed+' hm/t':''}</div>
+        </div>
+        <div class="mono" style="color:var(--gold);font-weight:700">${fmtTime(b.data.min||0)}</div>
+      </div>`;
+    }).join('')+benchDelta : '<div class="muted" style="padding:6px 0">Benchmark-uker: 3, 7, 11 og 14. Samme rute, samme sekk — tiden viser formen.</div>'}
+  </div>
+
+  <h2>Rekorder</h2>
+  <div class="row" style="gap:8px">
+    <div class="stat"><div class="v">${maxHm||'–'}</div><div class="l">mest hm</div></div>
+    <div class="stat"><div class="v">${maxMin?fmtTime(maxMin):'–'}</div><div class="l">lengste tur</div></div>
+    <div class="stat"><div class="v">${maxPack||'–'} kg</div><div class="l">tyngste sekk</div></div>
+  </div>
+
+  <h2>Alle turer</h2>
+  ${hikes.slice().reverse().map(h=>{
+    const c=hikeCalc(h);
+    return `<div class="card" style="padding:12px 14px">
+      <div class="spread">
+        <div>
+          <div style="font-weight:700">${h.data.benchmark?'⭐ ':''}${h.data.note?esc(h.data.note):'Langtur'}</div>
+          <div class="tiny mono">${h.date} · uke ${h.data.week||'?'}${h.data.stravaId?' · Strava':''}</div>
+        </div>
+        <div class="mono" style="color:var(--sky);font-weight:700">${fmtTime(h.data.min||0)}</div>
+      </div>
+      <div class="macro-bar">
+        <div class="macro"><div class="v">${h.data.km||0}</div><div class="l">km</div></div>
+        <div class="macro"><div class="v">${h.data.hm||0}</div><div class="l">hm</div></div>
+        <div class="macro"><div class="v">${c.vspeed??'–'}</div><div class="l">hm/t</div></div>
+        <div class="macro"><div class="v">${fmtPace(c.pace)}</div><div class="l">min/km</div></div>
+        <div class="macro"><div class="v">${h.data.pack||0}</div><div class="l">kg sekk</div></div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="muted">Ingen turer logget ennå. Første langtur: lørdag i uke 1.</div>'}
+  `;
 }
 
 // ------------------------------------------------------------
@@ -846,22 +1056,14 @@ function pageProgress(){
     ${weightChart(weights)}
   </div>
 
-  <h2>Benchmarkruta</h2>
-  <div class="card" style="padding:6px 14px">
-    ${benches.length? benches.map(b=>`<div class="list-item">
-      <div style="flex:1">
-        <div style="font-weight:600">Uke ${b.data.week}</div>
-        <div class="tiny">${b.data.hm} hm · ${b.data.pack} kg sekk</div>
+  <div class="card card2" style="padding:13px 14px;cursor:pointer" onclick="gotoPage('fjell')">
+    <div class="spread">
+      <div>
+        <div style="font-weight:700">⛰️ Fjellprogresjon</div>
+        <div class="tiny">${hikes.length} turer · ${totalHm.toLocaleString('no')} hm · benchmarks og tempo</div>
       </div>
-      <div class="mono" style="color:var(--gold);font-weight:700">${Math.floor((b.data.min||0)/60)}:${pad((b.data.min||0)%60)}</div>
-    </div>`).join('') : '<div class="muted" style="padding:10px 0">Benchmark-uker: 3, 7, 11 og 14. Samme rute, samme sekk — tiden viser formen.</div>'}
-  </div>
-
-  <h2>Fjellstatistikk</h2>
-  <div class="row" style="gap:8px;margin-bottom:12px">
-    <div class="stat"><div class="v">${hikes.length}</div><div class="l">turer</div></div>
-    <div class="stat"><div class="v">${totalHm.toLocaleString('no')}</div><div class="l">hm totalt</div></div>
-    <div class="stat"><div class="v">${hikes.reduce((s,h)=>s+(h.data.km||0),0).toFixed(0)}</div><div class="l">km totalt</div></div>
+      <div style="color:var(--sky);font-weight:700">→</div>
+    </div>
   </div>
 
   <h2>Løfte-PRs</h2>
@@ -964,9 +1166,9 @@ function pageSettings(){
     <input id="sName" value="${esc(settings.name)}">
     <label>Benchmarkrute (fast testtur)</label>
     <input id="sRoute" value="${esc(settings.benchmarkRoute)}" placeholder="F.eks. Ølen → lokal topp t/r">
-    <label>Withings Worker-URL</label>
+    <label>Worker-URL (Withings + Strava)</label>
     <input id="sWorker" value="${esc(settings.workerUrl)}" placeholder="https://solfit-withings.dinkonto.workers.dev">
-    <div class="tiny" style="margin-top:6px">Når denne er satt henter appen siste vekt automatisk fra Withings hver gang du åpner den. Se README for oppsett av Workeren.</div>
+    <div class="tiny" style="margin-top:6px">Én URL for begge: vekta hentes fra Withings og økter fra Strava hver gang du åpner appen. Engangskobling: åpne <span class="mono">worker-url/auth</span> (Withings) og <span class="mono">worker-url/strava/auth</span> (Strava). Se README.</div>
   </div>
   <button class="btn" onclick="saveSettings()">Lagre</button>
   <div class="card card2" style="margin-top:14px">
@@ -984,12 +1186,13 @@ function saveSettings(){
   settings.name = document.getElementById('sName').value || 'Leif';
   settings.benchmarkRoute = document.getElementById('sRoute').value;
   settings.workerUrl = document.getElementById('sWorker').value.trim();
-  saveAll(); toast('Lagret'); gotoPage('home'); syncWithings();
+  saveAll(); toast('Lagret'); gotoPage('home'); syncWithings(); stravaActs=null; syncStrava(true);
 }
 
 // ============================================================
 render();
 syncWithings();
+syncStrava();
 </script>
 </body>
 </html>

@@ -1,25 +1,30 @@
 /**
- * SolFit Atlas — Withings-integrasjon (Cloudflare Worker)
+ * SolFit Atlas — integrasjons-Worker (Cloudflare Worker)
+ * Withings (vekt) + Strava (økter/turer)
  *
- * Oppsett (én gang):
- * 1. Registrer app på https://developer.withings.com → Callback URL:
- *    https://<worker-navn>.<konto>.workers.dev/callback
- * 2. Opprett KV namespace i Cloudflare: "SOLFIT_KV", og bind den til
- *    Workeren som `KV` (Settings → Variables → KV Namespace Bindings).
- * 3. Legg inn secrets på Workeren:
- *    wrangler secret put WITHINGS_CLIENT_ID
- *    wrangler secret put WITHINGS_CLIENT_SECRET
- * 4. Besøk https://<worker>/auth ÉN gang og logg inn med Withings-kontoen.
- * 5. Lim Worker-URL-en inn i SolFit Atlas → Innstillinger.
+ * Oppsett Withings:
+ * 1. App på https://developer.withings.com → Callback: https://<worker>/callback
+ * 2. Secrets: WITHINGS_CLIENT_ID + WITHINGS_CLIENT_SECRET
+ * 3. Besøk https://<worker>/auth én gang.
+ *
+ * Oppsett Strava:
+ * 1. App på https://www.strava.com/settings/api → Authorization Callback Domain:
+ *    <worker-domenet, f.eks. solfit-withings.leif-kvamen.workers.dev>
+ * 2. Secrets: STRAVA_CLIENT_ID + STRAVA_CLIENT_SECRET
+ * 3. Besøk https://<worker>/strava/auth én gang.
+ *
+ * KV-binding: `KV` (namespace SOLFIT_KV)
  *
  * Endepunkter:
- *   /auth     – starter OAuth-innlogging hos Withings (gjøres én gang)
- *   /callback – mottar OAuth-koden og lagrer tokens i KV
- *   /weight   – returnerer {weight, date} for siste veiing (brukes av appen)
+ *   /auth, /callback, /weight          – Withings
+ *   /strava/auth, /strava/callback     – Strava OAuth (én gang)
+ *   /activities                        – siste 15 Strava-økter, forenklet JSON
  */
 
 const WITHINGS_TOKEN_URL = 'https://wbsapi.withings.net/v2/oauth2';
 const WITHINGS_MEASURE_URL = 'https://wbsapi.withings.net/measure';
+const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token';
+const STRAVA_API = 'https://www.strava.com/api/v3';
 
 export default {
   async fetch(request, env) {
@@ -29,6 +34,7 @@ export default {
       'Content-Type': 'application/json',
     };
 
+    // ---------------- WITHINGS ----------------
     if (url.pathname === '/auth') {
       const redirect = `${url.origin}/callback`;
       const authUrl =
@@ -42,7 +48,7 @@ export default {
     if (url.pathname === '/callback') {
       const code = url.searchParams.get('code');
       if (!code) return new Response('Mangler code', { status: 400 });
-      const tokens = await tokenRequest(env, {
+      const tokens = await withingsToken(env, {
         action: 'requesttoken',
         grant_type: 'authorization_code',
         code,
@@ -59,9 +65,8 @@ export default {
       let tokens = JSON.parse((await env.KV.get('withings_tokens')) || 'null');
       if (!tokens) return new Response(JSON.stringify({ error: 'Ikke autentisert. Besøk /auth først.' }), { status: 401, headers: cors });
 
-      // Refresh hvis utløpt (tokens varer 3 timer)
       if (Date.now() > (tokens.obtained_at || 0) + (tokens.expires_in - 120) * 1000) {
-        const refreshed = await tokenRequest(env, {
+        const refreshed = await withingsToken(env, {
           action: 'requesttoken',
           grant_type: 'refresh_token',
           refresh_token: tokens.refresh_token,
@@ -72,7 +77,6 @@ export default {
         }
       }
 
-      // Hent siste vektmåling (measure type 1 = vekt)
       const body = new URLSearchParams({
         action: 'getmeas',
         meastype: '1',
@@ -98,11 +102,88 @@ export default {
       return new Response(JSON.stringify({ weight, date: dateStr }), { headers: cors });
     }
 
-    return new Response(JSON.stringify({ ok: true, endpoints: ['/auth', '/callback', '/weight'] }), { headers: cors });
+    // ---------------- STRAVA ----------------
+    if (url.pathname === '/strava/auth') {
+      const redirect = `${url.origin}/strava/callback`;
+      const authUrl =
+        'https://www.strava.com/oauth/authorize' +
+        `?client_id=${env.STRAVA_CLIENT_ID}` +
+        '&response_type=code' +
+        `&redirect_uri=${encodeURIComponent(redirect)}` +
+        '&scope=activity:read_all&approval_prompt=auto';
+      return Response.redirect(authUrl, 302);
+    }
+
+    if (url.pathname === '/strava/callback') {
+      const code = url.searchParams.get('code');
+      if (!code) return new Response('Mangler code', { status: 400 });
+      const r = await fetch(STRAVA_TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: env.STRAVA_CLIENT_ID,
+          client_secret: env.STRAVA_CLIENT_SECRET,
+          code,
+          grant_type: 'authorization_code',
+        }),
+      });
+      const data = await r.json();
+      if (!data.access_token) return new Response('Token-utveksling feilet: ' + JSON.stringify(data), { status: 500 });
+      await env.KV.put('strava_tokens', JSON.stringify(data));
+      return new Response('✅ Strava koblet til! Du kan lukke denne fanen.', {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    }
+
+    if (url.pathname === '/activities') {
+      let tokens = JSON.parse((await env.KV.get('strava_tokens')) || 'null');
+      if (!tokens) return new Response(JSON.stringify({ error: 'Strava ikke koblet. Besøk /strava/auth først.' }), { status: 401, headers: cors });
+
+      // Strava expires_at er unix-sekunder
+      if (Date.now() / 1000 > (tokens.expires_at || 0) - 120) {
+        const r = await fetch(STRAVA_TOKEN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: env.STRAVA_CLIENT_ID,
+            client_secret: env.STRAVA_CLIENT_SECRET,
+            grant_type: 'refresh_token',
+            refresh_token: tokens.refresh_token,
+          }),
+        });
+        const refreshed = await r.json();
+        if (refreshed.access_token) {
+          tokens = { ...tokens, ...refreshed };
+          await env.KV.put('strava_tokens', JSON.stringify(tokens));
+        }
+      }
+
+      const r = await fetch(`${STRAVA_API}/athlete/activities?per_page=15`, {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      if (!r.ok) return new Response(JSON.stringify({ error: 'Strava API-feil ' + r.status }), { status: 502, headers: cors });
+      const acts = await r.json();
+      const out = (Array.isArray(acts) ? acts : []).map((a) => ({
+        id: a.id,
+        name: a.name,
+        type: a.sport_type || a.type,
+        date: (a.start_date_local || '').slice(0, 10),
+        min: Math.round((a.moving_time || 0) / 60),
+        km: Math.round(((a.distance || 0) / 1000) * 10) / 10,
+        hm: Math.round(a.total_elevation_gain || 0),
+        hr: a.average_heartrate ? Math.round(a.average_heartrate) : null,
+      }));
+      return new Response(JSON.stringify(out), { headers: cors });
+    }
+
+    return new Response(
+      JSON.stringify({ ok: true, endpoints: ['/auth', '/callback', '/weight', '/strava/auth', '/strava/callback', '/activities'] }),
+      { headers: cors }
+    );
   },
 };
 
-async function tokenRequest(env, params) {
+async function withingsToken(env, params) {
   const body = new URLSearchParams({
     client_id: env.WITHINGS_CLIENT_ID,
     client_secret: env.WITHINGS_CLIENT_SECRET,
