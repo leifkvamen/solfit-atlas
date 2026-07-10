@@ -331,6 +331,28 @@ function completeCount(){
   }
   return c;
 }
+function weekDates(w){
+  const arr=[]; const d0=new Date(START); d0.setDate(d0.getDate()+(w-1)*7);
+  for(let i=0;i<7;i++){ const d=new Date(d0); d.setDate(d0.getDate()+i); arr.push(dateStrOf(d)); }
+  return arr;
+}
+function mealsUsed(w){ return weekDates(w).reduce((s,ds)=>{ const n=nlog[ds]||{}; return s+(n.m1?1:0)+(n.m2?1:0); },0); }
+function pantryBar(w){
+  const used = mealsUsed(w);
+  const left = Math.max(0, 14-used);
+  const pct = Math.round(left/14*100);
+  const col = pct>50?'var(--green)':pct>15?'var(--gold)':'var(--red)';
+  return `<div class="card" style="padding:12px 14px">
+    <div class="spread">
+      <div style="font-weight:700">🧺 Ukeslager</div>
+      <span class="tiny mono" style="color:${col}">${left}/14 måltider igjen</span>
+    </div>
+    <div style="background:var(--card2);border-radius:99px;height:8px;margin-top:8px;overflow:hidden">
+      <div style="background:${col};height:100%;width:${pct}%"></div>
+    </div>
+    <div class="tiny" style="margin-top:6px">${left<=2? '⚠️ Nesten tomt — planlegg neste ukeshandel!' : left<=5? 'Lageret minker — handel om '+Math.ceil(left/2)+' dag'+(Math.ceil(left/2)>1?'er':'')+'.' : 'Basert på måltidene du huker av i matplanen.'}</div>
+  </div>`;
+}
 function phaseOf(w){ return PHASES.find(p => w>=p.weeks[0] && w<=p.weeks[1]) || (w<1 ? PHASES[0] : PHASES[3]); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -440,17 +462,21 @@ function useStrava(i, mode){
 // ============================================================
 // RENDER
 // ============================================================
+let lastPage = null;
 function render(){
   const el = document.getElementById('app');
   const pages = { home:pageHome, training:pageTraining, fjell:pageFjell, food:pageFood, shopping:pageShopping, progress:pageProgress, settings:pageSettings,
                   gymDetail:pageGymDetail, activeWO:pageActiveWO, cardioLog:pageCardioLog, hikeLog:pageHikeLog };
+  const sameView = S.page === lastPage;
+  const y = window.scrollY || 0;
   el.innerHTML = (pages[S.page]||pageHome)();
-  el.className = 'fade';
+  el.className = sameView ? '' : 'fade';
   ['home','training','fjell','food','progress'].forEach(p=>{
     const b=document.getElementById('nav-'+p);
     if(b) b.classList.toggle('active', S.page===p || (S.page.startsWith('gym')&&p==='training') || (['activeWO','cardioLog'].includes(S.page)&&p==='training') || (S.page==='hikeLog'&&p==='fjell') || (S.page==='shopping'&&p==='food'));
   });
-  window.scrollTo(0,0);
+  if(sameView){ window.scrollTo(0, y); } else { window.scrollTo(0,0); }
+  lastPage = S.page;
 }
 function gotoPage(p, sub){ S.page=p; S.sub=sub??null; render(); }
 
@@ -1027,7 +1053,7 @@ function pageFood(){
     <h1>Mat</h1>
     <button class="btn ghost sm" onclick="gotoPage('shopping')">🛒 Ukeshandel</button>
   </div>
-  <div class="tiny mono" style="margin-top:2px">I dag: <span style="color:${eatenToday>=kcalToday?'var(--green)':'var(--gold)'}">${eatenToday}</span> / ${kcalToday} kcal</div>
+  <div class="tiny mono" style="margin-top:2px">I dag: <span style="color:${eatenToday>=kcalToday?'var(--green)':'var(--gold)'}">${eatenToday}</span> / ${kcalToday} kcal · 🧺 ${Math.max(0,14-mealsUsed(cw))}/14 i ukeslageret</div>
   <div class="hscroll" style="margin:12px 0">
     ${DAYS.map((d,i)=>`<div class="week-pill ${i===di?'sel':(i===todayIdx?'cur':'')}" style="min-width:52px" onclick="S.foodDay=${i};render()">${d.slice(0,3)}</div>`).join('')}
   </div>
@@ -1131,6 +1157,7 @@ function pageShopping(){
   <div style="background:var(--card2);border-radius:99px;height:6px;margin-bottom:14px;overflow:hidden">
     <div style="background:var(--gold);height:100%;width:${total?Math.round(checked/total*100):0}%"></div>
   </div>
+  ${pantryBar(w)}
   ${SHOPPING.map((c,ci)=>`<h2>${c.emoji} ${c.cat}</h2>
     <div class="card" style="padding:6px 14px">
       ${c.items.map((it,ii)=>{
@@ -1215,12 +1242,61 @@ function pageProgress(){
   </div>
 
   <h2>Data</h2>
+  <div class="card card2" style="padding:13px 14px;cursor:pointer" onclick="coachReport()">
+    <div class="spread">
+      <div>
+        <div style="font-weight:700">📋 Coach-rapport</div>
+        <div class="tiny">Kopierer et kompakt sammendrag (vekt, økter, tempo, adherence) — lim inn i Claude-chatten, så justerer vi planen sammen.</div>
+      </div>
+      <div style="color:var(--gold);font-weight:700">→</div>
+    </div>
+  </div>
   <div class="row" style="gap:8px">
     <button class="btn dim" onclick="exportData()">Eksporter JSON</button>
     <button class="btn dim" onclick="document.getElementById('impFile').click()">Importer</button>
     <input type="file" id="impFile" accept=".json" style="display:none" onchange="importData(this)">
   </div>
   `;
+}
+
+function coachReport(){
+  const cw = Math.max(currentWeek(),1);
+  const L = [];
+  L.push('SOLFIT ATLAS · COACH-RAPPORT');
+  L.push('Dato: '+todayStr()+' · uke '+cw+'/15 ('+phaseOf(cw).name+') · '+daysToTrip()+' dager til Atlas');
+  const ws = plog.filter(p=>p.weight!=null).sort((a,b)=>a.date<b.date?-1:1);
+  if(ws.length){
+    const now = ws[ws.length-1];
+    L.push('VEKT: '+now.weight+' kg ('+now.date+') · plankurve i dag: '+targetWeightOn(todayStr()).toFixed(1)+' kg · mål 76 kg');
+    L.push('VEKTSERIE (siste 14): '+ws.slice(-14).map(p=>p.date.slice(5)+'='+p.weight).join(' '));
+  } else L.push('VEKT: ingen målinger ennå');
+  const sl = plog.filter(p=>p.sleep);
+  L.push('SØVN: '+(sl.length? 'snitt '+(sl.reduce((s,p)=>s+p.sleep,0)/sl.length).toFixed(1)+'/5 over '+sl.length+' netter · siste 7: '+sl.slice(-7).map(p=>p.sleep).join(',') : 'ikke logget'));
+  const adh=[]; for(let w=1;w<=Math.min(cw,15);w++) adh.push('u'+w+':'+mealsUsed(w)+'/14');
+  L.push('MÅLTIDER FULGT: '+adh.join(' '));
+  const cnt={}; wlog.forEach(x=>cnt[x.type]=(cnt[x.type]||0)+1);
+  L.push('ØKTER TOTALT: '+(Object.keys(cnt).length? Object.entries(cnt).map(([k,v])=>k+'='+v).join(' ') : 'ingen ennå'));
+  const names={machine_chest:'chest',oh_press:'ohp',wide_row:'row',stepup:'stepup',rdl:'rdl'};
+  L.push('PR kg: '+Object.entries(names).map(([id,n])=>n+'='+(prFor(id)||'-')).join(' '));
+  const hikes = wlog.filter(x=>x.type==='hike');
+  if(hikes.length){
+    L.push('FJELLTURER: '+hikes.map(h=>{const c=hikeCalc(h);return 'u'+(h.data.week||'?')+':'+(h.data.hm||0)+'hm/'+(h.data.min||0)+'min/'+(h.data.pack||0)+'kg'+(c.vspeed?'/'+c.vspeed+'hm-t':'')+(h.data.benchmark?'/BM':'');}).join(' · '));
+    const bm = hikes.filter(h=>h.data.benchmark);
+    if(bm.length) L.push('BENCHMARKS: '+bm.map(b=>'u'+b.data.week+'='+fmtTime(b.data.min||0)).join(' '));
+  } else L.push('FJELLTURER: ingen ennå');
+  const supDays = Object.keys(supps).filter(d=>supps[d].morgen&&supps[d].middag&&supps[d].kveld).length;
+  L.push('SUPPLEMENTS: '+supDays+' komplette dager · STREAK: '+calcStreak()+' · KOMPLETTE DAGER: '+completeCount());
+  L.push('SISTE 5 ØKTER: '+(wlog.slice(-5).map(x=>x.date.slice(5)+':'+(x.key||x.type)).join(' ')||'-'));
+  const txt = L.join('\n');
+  const done = ()=>toast('Rapport kopiert 📋 — lim inn i chatten');
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt, done)); }
+  else fallbackCopy(txt, done);
+}
+function fallbackCopy(txt, done){
+  const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){ toast('Kunne ikke kopiere'); }
+  ta.remove();
 }
 
 function calcStreak(){
