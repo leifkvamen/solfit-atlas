@@ -293,8 +293,9 @@ let plog       = load('sfa_plog', []);   // [{date, weight?, sleep?, source?}]
 let supps      = load('sfa_supps', {});  // { date: {morgen,middag,kveld} }
 let photos     = load('sfa_photos', {}); // { week: true }
 let shop       = load('sfa_shop', {});   // { 'w<uke>': { 'cat-idx': true } }
+let hbio       = load('sfa_hbio', []);   // [{date, restingHr, hrv, vo2max, sleepHours, ...}] fra Apple Helse/Garmin
 
-const saveLocal = () => { save('sfa_meta',meta); save('sfa_settings',settings); save('sfa_wlog',wlog); save('sfa_nlog',nlog); save('sfa_plog',plog); save('sfa_supps',supps); save('sfa_photos',photos); save('sfa_shop',shop); };
+const saveLocal = () => { save('sfa_meta',meta); save('sfa_settings',settings); save('sfa_wlog',wlog); save('sfa_nlog',nlog); save('sfa_plog',plog); save('sfa_supps',supps); save('sfa_photos',photos); save('sfa_shop',shop); save('sfa_hbio',hbio); };
 const saveAll = () => { meta.updated = Date.now(); saveLocal(); cloudPushSoon(); };
 
 // ============================================================
@@ -330,6 +331,21 @@ async function cloudPull(){
       toast('Synket fra skyen ☁️'); render();
     } else if((meta.updated||0) > (d.updated||0)){        // lokalt er nyere → last opp
       cloudPush();
+    }
+  }catch{}
+  cloudPullHealth();
+}
+function healthUrl(){ return settings.workerUrl.replace(/\/$/,'') + '/health?k=' + encodeURIComponent(settings.syncKey); }
+async function cloudPullHealth(){
+  if(!syncOn()) return;
+  try{
+    const r = await fetch(healthUrl());
+    if(!r.ok) return;
+    const arr = await r.json();
+    if(Array.isArray(arr)){
+      const before = JSON.stringify(hbio);
+      hbio = arr;
+      if(JSON.stringify(hbio) !== before){ save('sfa_hbio', hbio); render(); }
     }
   }catch{}
 }
@@ -483,6 +499,14 @@ function stravaPicker(mode){ // mode: 'hike' | 'cardio'
   </div>`;
 }
 
+function mergeStravaMetrics(d, a){
+  // Ta med de ekstra Garmin/Strava-tallene i økt-loggen
+  if(a.maxhr) d.maxhr = a.maxhr;
+  if(a.cadence) d.cadence = a.cadence;
+  if(a.watts) d.watts = a.watts;
+  if(a.effort != null) d.effort = a.effort;
+  if(a.kcal != null) d.kcal = a.kcal;
+}
 function useStrava(i, mode){
   const a = stravaActs[i]; if(!a) return;
   stravaSel = a;
@@ -891,7 +915,7 @@ function saveCardio(type){
     detail:document.getElementById('cDet').value,
     hr:+document.getElementById('cHr').value||null,
     note:document.getElementById('cNote').value };
-  if(stravaSel){ d.stravaId = stravaSel.id; if(stravaSel.hr && !d.hr) d.hr = stravaSel.hr; stravaSel = null; }
+  if(stravaSel){ d.stravaId = stravaSel.id; if(stravaSel.hr && !d.hr) d.hr = stravaSel.hr; mergeStravaMetrics(d, stravaSel); stravaSel = null; }
   wlog.push({date:todayStr(), type, data:d});
   saveAll(); toast('Kondisøkt lagret 🫁'); gotoPage('training');
 }
@@ -927,7 +951,7 @@ function saveHike(bench){
     pack:+document.getElementById('hPack').value||0,
     note:document.getElementById('hNote').value,
     benchmark:bench, week:Math.max(currentWeek(),1) };
-  if(stravaSel){ d.stravaId = stravaSel.id; if(stravaSel.hr) d.hr = stravaSel.hr; stravaSel = null; }
+  if(stravaSel){ d.stravaId = stravaSel.id; if(stravaSel.hr) d.hr = stravaSel.hr; mergeStravaMetrics(d, stravaSel); stravaSel = null; }
   wlog.push({date:todayStr(), type:'hike', data:d});
   saveAll(); toast('Tur lagret ⛰️'); gotoPage('fjell');
 }
@@ -1226,6 +1250,72 @@ function toggleShop(wk, k){
 // ------------------------------------------------------------
 // FREMGANG
 // ------------------------------------------------------------
+// ---- Fysiologi (Apple Helse / Garmin) ----
+function bioSorted(){ return hbio.slice().filter(x=>x&&x.date).sort((a,b)=>a.date<b.date?-1:1); }
+function bioLatest(field){ const a=bioSorted().filter(x=>x[field]!=null); return a.length? a[a.length-1][field] : null; }
+function bioDelta(field, n){ const a=bioSorted().filter(x=>x[field]!=null); if(a.length<2) return null; const w=a.slice(-n); return +(w[w.length-1][field]-w[0][field]).toFixed(1); }
+function bioAvg(field, n){ const a=bioSorted().filter(x=>x[field]!=null).slice(-n); if(!a.length) return null; return Math.round(a.reduce((s,x)=>s+x[field],0)/a.length*10)/10; }
+function aerobHikes(){
+  return wlog.filter(x=>x.type==='hike' && x.data.hr && x.data.min>0 && x.data.hm>0)
+    .map(h=>{ const vspeed=Math.round(h.data.hm/(h.data.min/60)); return {date:h.date, week:h.data.week, hr:h.data.hr, vspeed, eff:+(vspeed/h.data.hr).toFixed(3)}; });
+}
+function physioSection(){
+  const vo2=bioLatest('vo2max'), rhr=bioLatest('restingHr'), hrv=bioLatest('hrv'), sleep=bioAvg('sleepHours',7);
+  const vo2d=bioDelta('vo2max',21), rhrd=bioDelta('restingHr',21), hrvd=bioDelta('hrv',21);
+  const tile=(label,val,unit,delta,goodDown)=>{
+    let d='';
+    if(delta!=null && delta!==0){ const good = goodDown? delta<0 : delta>0; d=`<div class="tiny" style="color:${good?'var(--green)':'var(--red)'};margin-top:2px">${delta>0?'+':''}${delta} 3v</div>`; }
+    return `<div class="stat"><div class="v">${val==null?'–':val}${val!=null&&unit?'<span style="font-size:10px"> '+unit+'</span>':''}</div><div class="l">${label}</div>${d}</div>`;
+  };
+  const aero=aerobHikes();
+  let aeroBlock='';
+  if(aero.length>=2){
+    const f=aero[0], l=aero[aero.length-1];
+    const up = l.eff>f.eff;
+    aeroBlock = `<div class="tiny" style="margin-top:8px;color:${up?'var(--green)':'var(--text2)'}">Aerob effektivitet: ${l.vspeed} hm/t @ ${l.hr} puls (var ${f.vspeed}@${f.hr}) — ${up?'▲ mer fjell per hjerteslag, du blir sprekere':'følg med, trenger flere turer'}</div>`;
+  } else if(aero.length===1){
+    aeroBlock = `<div class="tiny" style="margin-top:8px">Aerob effektivitet: ${aero[0].vspeed} hm/t @ ${aero[0].hr} puls — trenden tegnes fra tur nr. 2.</div>`;
+  } else {
+    aeroBlock = `<div class="tiny" style="margin-top:8px">Aerob effektivitet tegnes når du har logget turer med puls (Garmin via Strava).</div>`;
+  }
+  const empty = !hbio.length;
+  return `
+  <h2>Fysiologi</h2>
+  <div class="card card2">
+    <div class="row" style="gap:8px">
+      ${tile('VO2max', vo2, '', vo2d, false)}
+      ${tile('Hvilepuls', rhr, 'slag', rhrd, true)}
+      ${tile('HRV', hrv, 'ms', hrvd, false)}
+      ${tile('Søvn snitt', sleep, 't', null, false)}
+    </div>
+    ${aeroBlock}
+    ${empty? '<div class="tiny" style="margin-top:8px;color:var(--gold)">☁️ Ingen helsedata ennå — fylles automatisk når Genveier-automasjonen kjører (hvilepuls, HRV, VO2max, søvn fra Garmin/Apple Helse).</div>':''}
+  </div>`;
+}
+function atlasReadiness(){
+  const cw=Math.max(currentWeek(),1);
+  const hikes=wlog.filter(x=>x.type==='hike');
+  const maxMin=hikes.reduce((s,h)=>Math.max(s,h.data.min||0),0);
+  const maxHm=hikes.reduce((s,h)=>Math.max(s,h.data.hm||0),0);
+  const maxPack=hikes.reduce((s,h)=>Math.max(s,h.data.pack||0),0);
+  const vo2=bioLatest('vo2max'); const rhrd=bioDelta('restingHr',28);
+  const lw=latestWeight(); const diff=lw? lw.weight-targetWeightOn(todayStr()) : null;
+  const rows=[
+    {l:'Lengste tur', v:maxMin?fmtTime(maxMin)+' t':'–', t:'mål 5 t+', ok:maxMin>=300?2:maxMin>=150?1:0},
+    {l:'Høydemeter (tur)', v:maxHm?maxHm+' hm':'–', t:'mål 1000+', ok:maxHm>=1000?2:maxHm>=500?1:0},
+    {l:'Sekkvekt', v:maxPack?maxPack+' kg':'–', t:'mål 12 kg', ok:maxPack>=12?2:maxPack>=8?1:0},
+    {l:'VO2max', v:vo2!=null?vo2:'–', t:'guide 45+', ok:vo2==null?-1:(vo2>=45?2:vo2>=40?1:0)},
+    {l:'Hvilepuls-trend', v:rhrd==null?'–':(rhrd>0?'+':'')+rhrd, t:'skal synke', ok:rhrd==null?-1:(rhrd<0?2:rhrd===0?1:0)},
+    {l:'Vekt vs plan', v:diff==null?'–':(diff>0?'+':'')+diff.toFixed(1)+' kg', t:'på/under', ok:diff==null?-1:(diff<=0.3?2:diff<=1.5?1:0)},
+  ];
+  const dot=ok=>ok===2?'🟢':ok===1?'🟡':ok===0?'🔴':'⚪';
+  return `
+  <h2>Atlas-klarhet</h2>
+  <div class="card">
+    ${rows.map(r=>`<div class="list-item"><div style="flex:1"><div style="font-weight:600">${dot(r.ok)} ${r.l}</div><div class="tiny">${r.t}</div></div><div class="mono" style="color:var(--gold)">${r.v}</div></div>`).join('')}
+    <div class="tiny" style="margin-top:8px;line-height:1.6">Tidlig i løpet (uke ${cw}/15) — 🟢 betyr Atlas-nivå, ikke der du <i>må</i> være nå. Trykk Coach-rapport nederst, så leser Claude alt og gir en helhetsvurdering av om formen holder til Marokko.</div>
+  </div>`;
+}
 function pageProgress(){
   const weights = plog.filter(p=>p.weight!=null).sort((a,b)=>a.date<b.date?-1:1);
   const lw = latestWeight();
@@ -1261,6 +1351,10 @@ function pageProgress(){
       <div style="color:var(--sky);font-weight:700">→</div>
     </div>
   </div>
+
+  ${physioSection()}
+
+  ${atlasReadiness()}
 
   <h2>Løfte-PRs</h2>
   <div class="card" style="padding:6px 14px">
@@ -1325,7 +1419,18 @@ function coachReport(){
   } else L.push('FJELLTURER: ingen ennå');
   const supDays = Object.keys(supps).filter(d=>supps[d].morgen&&supps[d].middag&&supps[d].kveld).length;
   L.push('SUPPLEMENTS: '+supDays+' komplette dager · STREAK: '+calcStreak()+' · KOMPLETTE DAGER: '+completeCount());
-  L.push('SISTE 5 ØKTER: '+(wlog.slice(-5).map(x=>x.date.slice(5)+':'+(x.key||x.type)).join(' ')||'-'));
+  // Fysiologi fra Apple Helse/Garmin
+  const vo2=bioLatest('vo2max'), rhr=bioLatest('restingHr'), hrv=bioLatest('hrv'), sleep=bioAvg('sleepHours',7);
+  if(hbio.length){
+    L.push('FYSIOLOGI: VO2max='+(vo2!=null?vo2+(bioDelta('vo2max',21)!=null?'('+(bioDelta('vo2max',21)>=0?'+':'')+bioDelta('vo2max',21)+'/3v)':''):'-')
+      +' hvilepuls='+(rhr!=null?rhr+(bioDelta('restingHr',21)!=null?'('+(bioDelta('restingHr',21)>=0?'+':'')+bioDelta('restingHr',21)+')':''):'-')
+      +' HRV='+(hrv!=null?hrv:'-')+' sovn='+(sleep!=null?sleep+'t':'-'));
+    const b=bioSorted().slice(-10);
+    if(b.length) L.push('HELSE-SERIE (siste): '+b.map(x=>x.date.slice(5)+':'+[x.restingHr&&'rhr'+x.restingHr,x.vo2max&&'vo2'+x.vo2max,x.hrv&&'hrv'+x.hrv,x.sleepHours&&'sov'+x.sleepHours].filter(Boolean).join('/')).join(' '));
+  } else L.push('FYSIOLOGI: ingen helsedata ennå (Apple Helse-bro ikke aktiv)');
+  const aero=aerobHikes();
+  if(aero.length) L.push('AEROB EFFEKTIVITET (hm-t@puls): '+aero.map(a=>'u'+(a.week||'?')+':'+a.vspeed+'@'+a.hr).join(' '));
+  L.push('SISTE 5 ØKTER: '+(wlog.slice(-5).map(x=>x.date.slice(5)+':'+(x.key||x.type)+(x.data&&x.data.hr?'/'+x.data.hr+'bpm':'')).join(' ')||'-'));
   const txt = L.join('\n');
   const done = ()=>toast('Rapport kopiert 📋 — lim inn i chatten');
   if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt, done)); }
