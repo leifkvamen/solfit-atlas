@@ -285,7 +285,8 @@ let S = { page:'home', sub:null, viewWeek:null, activeWO:null, foodDay:null, day
 function load(k,d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch{ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
 
-let settings   = load('sfa_settings', { name:'Leif', workerUrl:'', benchmarkRoute:'' });
+let settings   = load('sfa_settings', { name:'Leif', workerUrl:'', benchmarkRoute:'', syncKey:'' });
+let meta       = load('sfa_meta', { updated: 0 });
 let wlog       = load('sfa_wlog', []);   // [{date, type, key?, data}]
 let nlog       = load('sfa_nlog', {});   // { 'YYYY-MM-DD': {m1:bool, m2:bool} }
 let plog       = load('sfa_plog', []);   // [{date, weight?, sleep?, source?}]
@@ -293,7 +294,45 @@ let supps      = load('sfa_supps', {});  // { date: {morgen,middag,kveld} }
 let photos     = load('sfa_photos', {}); // { week: true }
 let shop       = load('sfa_shop', {});   // { 'w<uke>': { 'cat-idx': true } }
 
-const saveAll = () => { save('sfa_settings',settings); save('sfa_wlog',wlog); save('sfa_nlog',nlog); save('sfa_plog',plog); save('sfa_supps',supps); save('sfa_photos',photos); save('sfa_shop',shop); };
+const saveLocal = () => { save('sfa_meta',meta); save('sfa_settings',settings); save('sfa_wlog',wlog); save('sfa_nlog',nlog); save('sfa_plog',plog); save('sfa_supps',supps); save('sfa_photos',photos); save('sfa_shop',shop); };
+const saveAll = () => { meta.updated = Date.now(); saveLocal(); cloudPushSoon(); };
+
+// ============================================================
+// SKYSYNC — appdata i Cloudflare KV via Workeren
+// ============================================================
+let pushTimer = null;
+function syncUrl(){ return settings.workerUrl.replace(/\/$/,'') + '/data?k=' + encodeURIComponent(settings.syncKey); }
+function syncOn(){ return !!(settings.workerUrl && settings.syncKey && settings.syncKey.length>=6); }
+function cloudPushSoon(){
+  if(!syncOn()) return;
+  clearTimeout(pushTimer); pushTimer = setTimeout(cloudPush, 1500);
+}
+async function cloudPush(){
+  if(!syncOn()) return;
+  try{
+    const payload = { settings, wlog, nlog, plog, supps, photos, shop, updated: meta.updated };
+    await fetch(syncUrl(), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  }catch{}
+}
+async function cloudPull(){
+  if(!syncOn()) return;
+  try{
+    const r = await fetch(syncUrl());
+    if(!r.ok) return;
+    const d = await r.json();
+    if(!d){ cloudPush(); return; }                        // ingenting i skyen ennå → last opp
+    if((d.updated||0) > (meta.updated||0)){               // skyen er nyere → adopter
+      if(d.wlog) wlog=d.wlog; if(d.nlog) nlog=d.nlog; if(d.plog) plog=d.plog;
+      if(d.supps) supps=d.supps; if(d.photos) photos=d.photos; if(d.shop) shop=d.shop;
+      if(d.settings){ d.settings.workerUrl = settings.workerUrl; d.settings.syncKey = settings.syncKey; settings = d.settings; }
+      meta.updated = d.updated;
+      saveLocal();
+      toast('Synket fra skyen ☁️'); render();
+    } else if((meta.updated||0) > (d.updated||0)){        // lokalt er nyere → last opp
+      cloudPush();
+    }
+  }catch{}
+}
 
 // ============================================================
 // HELPERS
@@ -1375,6 +1414,9 @@ function pageSettings(){
     <label>Worker-URL (Withings + Strava)</label>
     <input id="sWorker" value="${esc(settings.workerUrl)}" placeholder="https://solfit-withings.dinkonto.workers.dev">
     <div class="tiny" style="margin-top:6px">Én URL for begge: vekta hentes fra Withings og økter fra Strava hver gang du åpner appen. Engangskobling: åpne <span class="mono">worker-url/auth</span> (Withings) og <span class="mono">worker-url/strava/auth</span> (Strava). Se README.</div>
+    <label>Synk-kode (skysync)</label>
+    <input id="sSync" value="${esc(settings.syncKey||'')}" placeholder="Minst 6 tegn — velg selv">
+    <div class="tiny" style="margin-top:6px">☁️ Med kode satt lagres alt automatisk i skyen (gratis, via Workeren) og synkes mellom enhetene dine. Skriv inn <b>samme kode</b> på telefon, iPad og PC — nyeste versjon vinner. La stå tom for kun lokal lagring.</div>
   </div>
   <button class="btn" onclick="saveSettings()">Lagre</button>
   <div class="card card2" style="margin-top:14px">
@@ -1392,13 +1434,18 @@ function saveSettings(){
   settings.name = document.getElementById('sName').value || 'Leif';
   settings.benchmarkRoute = document.getElementById('sRoute').value;
   settings.workerUrl = document.getElementById('sWorker').value.trim();
-  saveAll(); toast('Lagret'); gotoPage('home'); syncWithings(); stravaActs=null; syncStrava(true);
+  settings.syncKey = document.getElementById('sSync').value.trim();
+  // Bevisst uten tidsstempel-bump: en ny enhet som får synk-kode skal
+  // adoptere skyen, ikke overskrive den med tom lokal data.
+  saveLocal(); toast('Lagret'); gotoPage('home'); syncWithings(); stravaActs=null; syncStrava(true); cloudPull();
 }
 
 // ============================================================
 render();
 syncWithings();
 syncStrava();
+cloudPull();
+document.addEventListener('visibilitychange', () => { if(!document.hidden) cloudPull(); });
 </script>
 </body>
 </html>

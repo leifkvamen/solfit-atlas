@@ -19,6 +19,7 @@
  *   /auth, /callback, /weight          – Withings
  *   /strava/auth, /strava/callback     – Strava OAuth (én gang)
  *   /activities                        – siste 15 Strava-økter, forenklet JSON
+ *   /data?k=<synk-kode>                – GET/PUT: skysync av appdata (KV)
  */
 
 const WITHINGS_TOKEN_URL = 'https://wbsapi.withings.net/v2/oauth2';
@@ -33,6 +34,40 @@ export default {
       'Access-Control-Allow-Origin': '*',
       'Content-Type': 'application/json',
     };
+
+    // ---------------- SKYSYNC (appdata) ----------------
+    if (url.pathname === '/data') {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          },
+        });
+      }
+      const key = (url.searchParams.get('k') || '').trim();
+      if (key.length < 6) {
+        return new Response(JSON.stringify({ error: 'Synk-kode må være minst 6 tegn (?k=...)' }), { status: 400, headers: cors });
+      }
+      const kvKey = 'appdata:' + key;
+      if (request.method === 'GET') {
+        const data = await env.KV.get(kvKey);
+        return new Response(data || 'null', { headers: cors });
+      }
+      if (request.method === 'PUT') {
+        const body = await request.text();
+        if (body.length > 400000) {
+          return new Response(JSON.stringify({ error: 'For stor payload' }), { status: 413, headers: cors });
+        }
+        try { JSON.parse(body); } catch {
+          return new Response(JSON.stringify({ error: 'Ugyldig JSON' }), { status: 400, headers: cors });
+        }
+        await env.KV.put(kvKey, body);
+        return new Response(JSON.stringify({ ok: true }), { headers: cors });
+      }
+      return new Response(JSON.stringify({ error: 'Bruk GET eller PUT' }), { status: 405, headers: cors });
+    }
 
     // ---------------- WITHINGS ----------------
     if (url.pathname === '/auth') {
@@ -177,7 +212,7 @@ export default {
     }
 
     return new Response(
-      JSON.stringify({ ok: true, endpoints: ['/auth', '/callback', '/weight', '/strava/auth', '/strava/callback', '/activities'] }),
+      JSON.stringify({ ok: true, endpoints: ['/auth', '/callback', '/weight', '/strava/auth', '/strava/callback', '/activities', '/data'] }),
       { headers: cors }
     );
   },

@@ -42,6 +42,13 @@ Etter dette: «Hent fra Strava»-listen dukker opp i loggskjemaene for langtur o
 og fyller inn tid, distanse, høydemeter og puls automatisk. Fjell-siden viser
 stigningstempo (hm/t), benchmark-utvikling og Toubkal-teller basert på turene.
 
+## Skysync (valgfritt, gratis)
+
+Samme Worker og samme KV. Sett en «Synk-kode» (minst 6 tegn) i appens innstillinger
+på alle enheter — appen lagrer hele tilstanden i KV via `PUT /data?k=<kode>` og henter
+den ved oppstart og når appen får fokus. Nyeste tidsstempel vinner.
+Gratisplanen (1000 KV-skrivinger/dag) er langt mer enn nok.
+
 ## Programmet i korte trekk
 
 | Fase  | Uker  | Fokus |
