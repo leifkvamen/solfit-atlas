@@ -69,6 +69,58 @@ export default {
       return new Response(JSON.stringify({ error: 'Bruk GET eller PUT' }), { status: 405, headers: cors });
     }
 
+    // ---------------- HELSEDATA (Apple Helse / Garmin via Genveier) ----------------
+    // Daglige fysiologimålinger som ikke finnes i Strava: hvilepuls, HRV, VO2max, søvn.
+    // Apple Genveier-automasjon sender POST /health?k=<synk-kode> med JSON {date, restingHr, hrv, vo2max, sleepHours, ...}.
+    if (url.pathname === '/health') {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          },
+        });
+      }
+      const key = (url.searchParams.get('k') || '').trim();
+      if (key.length < 6) {
+        return new Response(JSON.stringify({ error: 'Synk-kode må være minst 6 tegn (?k=...)' }), { status: 400, headers: cors });
+      }
+      const hKey = 'health:' + key;
+      if (request.method === 'GET') {
+        const data = await env.KV.get(hKey);
+        return new Response(data || '[]', { headers: cors });
+      }
+      if (request.method === 'POST' || request.method === 'PUT') {
+        const raw = await request.text();
+        if (raw.length > 20000) {
+          return new Response(JSON.stringify({ error: 'For stor payload' }), { status: 413, headers: cors });
+        }
+        let entry;
+        try { entry = JSON.parse(raw); } catch {
+          return new Response(JSON.stringify({ error: 'Ugyldig JSON' }), { status: 400, headers: cors });
+        }
+        // Godta både ett objekt og en liste. Normaliser til liste.
+        const incoming = Array.isArray(entry) ? entry : [entry];
+        const arr = JSON.parse((await env.KV.get(hKey)) || '[]');
+        for (const e of incoming) {
+          if (!e || !e.date) continue;
+          const clean = {};
+          for (const k of ['date', 'restingHr', 'hrv', 'vo2max', 'sleepHours', 'sleepScore', 'steps', 'weight', 'bodyBattery', 'stress']) {
+            if (e[k] !== undefined && e[k] !== null && e[k] !== '' && !(typeof e[k] === 'number' && isNaN(e[k]))) clean[k] = e[k];
+          }
+          const idx = arr.findIndex((x) => x.date === e.date);
+          if (idx >= 0) arr[idx] = { ...arr[idx], ...clean };
+          else arr.push(clean);
+        }
+        arr.sort((a, b) => (a.date < b.date ? -1 : 1));
+        const trimmed = arr.slice(-200);
+        await env.KV.put(hKey, JSON.stringify(trimmed));
+        return new Response(JSON.stringify({ ok: true, count: trimmed.length }), { headers: cors });
+      }
+      return new Response(JSON.stringify({ error: 'Bruk GET, POST eller PUT' }), { status: 405, headers: cors });
+    }
+
     // ---------------- WITHINGS ----------------
     if (url.pathname === '/auth') {
       const redirect = `${url.origin}/callback`;
@@ -207,12 +259,17 @@ export default {
         km: Math.round(((a.distance || 0) / 1000) * 10) / 10,
         hm: Math.round(a.total_elevation_gain || 0),
         hr: a.average_heartrate ? Math.round(a.average_heartrate) : null,
+        maxhr: a.max_heartrate ? Math.round(a.max_heartrate) : null,
+        cadence: a.average_cadence ? Math.round(a.average_cadence) : null,
+        watts: a.average_watts ? Math.round(a.average_watts) : null,
+        effort: a.suffer_score != null ? Math.round(a.suffer_score) : null,
+        kcal: a.calories != null ? Math.round(a.calories) : (a.kilojoules != null ? Math.round(a.kilojoules) : null),
       }));
       return new Response(JSON.stringify(out), { headers: cors });
     }
 
     return new Response(
-      JSON.stringify({ ok: true, endpoints: ['/auth', '/callback', '/weight', '/strava/auth', '/strava/callback', '/activities', '/data'] }),
+      JSON.stringify({ ok: true, endpoints: ['/auth', '/callback', '/weight', '/strava/auth', '/strava/callback', '/activities', '/data', '/health'] }),
       { headers: cors }
     );
   },
