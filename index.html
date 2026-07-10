@@ -201,31 +201,31 @@ const MEALS = [
      ing:['350 g kyllingfilet','90 g jasminris (tørrvekt)','15 g smør','300 g brokkoli','Salt, pepper, paprikakrydder'],
      steps:['Kok risen. Stek kyllingen i smør.','Damp brokkolien. Salt godt.','Alt på én tallerken. Ferdig på 20 min.']},
     {name:'Yoghurt-bolle + egg', emoji:'🥣', kcal:1150, protein:82, carbs:54, fat:60,
-     ing:['500 g gresk yoghurt naturell 2 %','150 g økologiske blåbær','30 g valnøtter','1 ss honning','3 egg (kokt eller stekt i smør)'],
-     steps:['Yoghurt i bolle, blåbær, valnøtter og honning på topp.','Eggene ved siden av. 5 minutter totalt.']}
+     ing:['400 g gresk yoghurt naturell 2 %','2 dl naturell kefir','150 g økologiske blåbær','30 g valnøtter (evt. gresskarkjerner)','1 ss honning','3 egg (kokt eller stekt i smør)'],
+     steps:['Yoghurt i bolle, blåbær, valnøtter og honning på topp.','Eggene ved siden av. Kefiren drikkes til — magevennlig avslutning.']}
   ],
   [ // Tirsdag
     {name:'Karbonader & poteter', emoji:'🥩', kcal:1150, protein:90, carbs:78, fat:40,
      ing:['400 g karbonadedeig','1 egg (bindemiddel)','450 g kokte poteter','Gulrot og erter','10 g smør, salt, pepper'],
      steps:['Bland deig, egg og krydder. Form karbonader.','Stek i smør 3–4 min per side.','Kok poteter og grønnsaker.']},
-    {name:'Bacon-omelett & yoghurt', emoji:'🍳', kcal:1150, protein:74, carbs:20, fat:76,
-     ing:['4 egg','80 g nitrittfri bacon','50 g revet ost','½ avokado','200 g gresk yoghurt 2 % til slutt'],
-     steps:['Stek bacon, hell over eggene, ost på topp.','Avokado ved siden. Yoghurt som dessert.']}
+    {name:'Osteomelett & yoghurt', emoji:'🍳', kcal:1130, protein:76, carbs:24, fat:72,
+     ing:['5 egg','70 g revet ost','1 avokado','100 g gresk yoghurt 2 % + 2 dl naturell kefir til slutt'],
+     steps:['Stek omelett i smør, ost på topp.','Avokado ved siden. Yoghurt som dessert.','(Bacon droppet — ekstra egg, ost og avokado dekker kaloriene.)']}
   ],
   [ // Onsdag
     {name:'Laks & poteter', emoji:'🐟', kcal:1150, protein:70, carbs:70, fat:56,
      ing:['300 g laksefilet','450 g poteter','15 g smør','Asparges eller grønne bønner','Sitron, salt'],
      steps:['Laks i ovn 200 °C i 15–18 min.','Kok poteter, smørdamp grønnsakene.']},
     {name:'Yoghurt-bolle + egg', emoji:'🥣', kcal:1150, protein:80, carbs:54, fat:58,
-     ing:['600 g gresk yoghurt naturell 2 %','3 egg (kokt eller stekt i smør)','150 g økologiske blåbær','30 g valnøtter','1 ss honning'],
+     ing:['500 g gresk yoghurt naturell 2 %','2 dl naturell kefir','3 egg (kokt eller stekt i smør)','150 g økologiske blåbær','30 g valnøtter (evt. gresskarkjerner)','1 ss honning'],
      steps:['Yoghurt-bolle som vanlig, eggene ved siden.','Egg = enkleste fettkilden i kuttet — 3–4 egg hver dag gjennom uka.']}
   ],
   [ // Torsdag
     {name:'Kylling, ris & brokkoli', emoji:'🍗', kcal:1150, protein:92, carbs:80, fat:32,
      ing:['350 g kyllingfilet','90 g jasminris (tørrvekt)','15 g smør','300 g brokkoli','Salt, pepper'],
      steps:['Samme som mandag. Repetisjon = null friksjon.']},
-    {name:'Cottage cheese & egg', emoji:'🥚', kcal:1150, protein:88, carbs:24, fat:66,
-     ing:['400 g cottage cheese','3 egg','Cherrytomater','1 ss Muraglia EVOO','Salt, pepper'],
+    {name:'Cottage cheese & egg', emoji:'🥚', kcal:1150, protein:84, carbs:28, fat:66,
+     ing:['300 g cottage cheese','2 dl naturell kefir','3 egg','Cherrytomater','1 ss Muraglia EVOO','Salt, pepper'],
      steps:['Kok/stek eggene.','Cottage cheese med tomat, olivenolje og salt.']}
   ],
   [ // Fredag
@@ -233,7 +233,7 @@ const MEALS = [
      ing:['400 g storfekjøttdeig (10–14 %)','1 egg (bindemiddel)','400 g poteter i båter','15 g smør eller ghee til båtene','Salat, tomat, rødløk','2 ss rømme + salt/pepper/paprika'],
      steps:['Potetbåter: vend i smeltet smør/ghee og salt, ovn 200 °C i ~35 min.','Bland deig og egg, form 2 burgere. Stek 4–5 min per side.','Burgertallerken: burgere på salatseng, båter og rømme ved siden. Fredagsfølelse uten dritt.','Vil du ha brød? Ekte surdeigsbrød fra baker funker — sjekk at lista kun er mel, vann og salt (vanlige burgerbrød har nesten alltid frøoljer).']},
     {name:'Yoghurt-bolle + egg', emoji:'🥣', kcal:1150, protein:82, carbs:54, fat:60,
-     ing:['500 g gresk yoghurt naturell 2 %','150 g økologiske blåbær','30 g valnøtter','1 ss honning','3 egg'],
+     ing:['400 g gresk yoghurt naturell 2 %','2 dl naturell kefir','150 g økologiske blåbær','30 g valnøtter (evt. gresskarkjerner)','1 ss honning','3 egg'],
      steps:['Samme som mandag kveld.']}
   ],
   [ // Lørdag — turdag 2600
@@ -249,7 +249,7 @@ const MEALS = [
      ing:['300 g ørret- eller laksefilet','350 g poteter','Smørdampede grønnsaker','Sitron'],
      steps:['Fisk i ovn, poteter i kjele, grønnsaker i smør.']},
     {name:'Omelett & yoghurt', emoji:'🍳', kcal:1050, protein:76, carbs:36, fat:58,
-     ing:['3 egg','30 g ost','400 g gresk yoghurt 2 %','100 g økologiske blåbær'],
+     ing:['3 egg','30 g ost','300 g gresk yoghurt 2 %','2 dl naturell kefir','100 g økologiske blåbær'],
      steps:['Omelett i smør.','Yoghurt med blåbær etterpå. Lett dag — i morgen starter ny uke.']}
   ]
 ];
@@ -258,16 +258,16 @@ const MEALS = [
 const SHOPPING = [
   {cat:'Kjøtt & fisk', emoji:'🥩', items:[
     '700 g kyllingfilet','400 g karbonadedeig','700 g storfekjøttdeig (10–14 %)',
-    '300 g laksefilet','300 g ørret- eller laksefilet','1 pk nitrittfri bacon (80 g)']},
+    '300 g laksefilet','300 g ørret- eller laksefilet']},
   {cat:'Meieri & egg', emoji:'🥚', items:[
-    '25 egg (2 kartonger)','2,2 kg gresk yoghurt naturell 2 % (4–5 beger)','400 g cottage cheese',
+    '26 egg (2 store kartonger)','1,7 kg gresk yoghurt naturell 2 % (3–4 beger)','1,5 l naturell kefir (kun melk + kefirkultur)','300 g cottage cheese',
     '1 pose revet ost','1 liten boks rømme','1 pk smør (evt. ghee)']},
   {cat:'Frukt & grønt', emoji:'🥦', items:[
     '700 g økologiske blåbær (frosne funker)','2 stk brokkoli (600 g)','2 kg poteter',
     'Salat, 2 tomater, 1 rødløk','1 boks cherrytomater','1 avokado',
     'Asparges eller grønne bønner','Gulrøtter og erter','1 løk + hvitløk','1 sitron','1 banan']},
   {cat:'Tørrvarer & annet', emoji:'🌾', items:[
-    '300 g jasminris','100 g havregryn','150 g valnøtter + 50 g turnøtter','1 glass honning',
+    '300 g jasminris','100 g havregryn','150 g valnøtter + 50 g turnøtter (allergi? bytt til gresskarkjerner naturell)','1 glass honning',
     '1 boks hermetiske tomater','Krydder: paprika, oregano, salt, pepper']}
 ];
 
@@ -1076,7 +1076,8 @@ function pageFood(){
     <div style="font-weight:700;margin-bottom:4px">Faste regler</div>
     <div class="tiny" style="line-height:1.7">
       · Kun smør, Muraglia EVOO eller ghee — aldri frøoljer<br>
-      · Nitrittfri bacon · økologiske blåbær · ingen maltodekstrin/sitronsyre<br>
+      · Økologiske blåbær · ingen maltodekstrin/sitronsyre<br>
+      · 2 dl naturell kefir til måltid 2 — levende kultur for magen<br>
       · Protein-mål: 175–185 g hver dag, uansett<br>
       · Sulten mellom måltidene? Vann, salt, svart kaffe. Det går over.
     </div>
